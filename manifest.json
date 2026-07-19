@@ -1,7 +1,7 @@
 {
-  "name": "Bijli Meter Tracker",
-  "short_name": "Bijli Meter",
-  "description": "Track daily electricity meter readings for any Pakistani distribution company. Works offline, data stays on your phone.",
+  "name": "Bijli Meter Tracker | بجلی میٹر ٹریکر",
+  "short_name": "بجلی میٹر",
+  "description": "Track daily electricity meter readings for any Pakistani distribution company — in English and Urdu. Works offline. روزانہ بجلی میٹر ریڈنگ کا حساب، انگریزی اور اردو میں۔",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -10,11 +10,35 @@
   "theme_color": "#12161c",
   "lang": "en",
   "dir": "ltr",
-  "categories": ["utilities", "productivity", "finance"],
+  "categories": [
+    "utilities",
+    "productivity",
+    "finance"
+  ],
   "icons": [
-    { "src": "icon-192.png",  "sizes": "192x192",   "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png",  "sizes": "512x512",   "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png",  "sizes": "512x512",   "type": "image/png", "purpose": "maskable" },
-    { "src": "icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
   ]
 }
