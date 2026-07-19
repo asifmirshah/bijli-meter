@@ -208,6 +208,11 @@ td.cum{color:var(--meas)}
 .sheet .sub{color:var(--ink-dim);font-size:13px;margin:0 0 18px;font-family:var(--mono)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
+#login{overflow-y:auto;justify-content:flex-start;padding-top:max(48px,var(--safe-t))}
+#login > div{margin:auto 0;padding:12px 0}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-dim);margin:2px 0 6px}
+.chk input{width:18px;height:18px;accent-color:var(--live)}
+
 /* ---------- toast ---------- */
 #toast{
   position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + var(--safe-b));
@@ -220,24 +225,104 @@ td.cum{color:var(--meas)}
 </head>
 <body>
 
-<!-- ============================ LOGIN ============================ -->
+<!-- ============================ WELCOME / SIGN UP / LOG IN ============================ -->
 <div id="login">
-  <div class="brand">
-    <div class="bolt">⚡</div>
-    <h1>Bijli Meter Tracker</h1>
-    <p id="loginSub">Daily readings for every Pakistani electricity supplier</p>
+
+  <!-- ---- A. Welcome: shown when nobody has signed up yet ---- -->
+  <div id="scrWelcome">
+    <div class="brand">
+      <div class="bolt">⚡</div>
+      <h1>Bijli Meter Tracker</h1>
+      <p>Track your daily units for any electricity supplier in Pakistan</p>
+    </div>
+    <button class="btn" onclick="showAuth('signup')">Create an account</button>
+    <div style="height:10px"></div>
+    <button class="btn ghost" onclick="showAuth('restore')">I already have a backup file</button>
+    <p class="hint">Everything is stored on this phone only. No internet, no accounts on any server, nothing uploaded.</p>
   </div>
-  <div class="field">
-    <label for="pw1">Password</label>
-    <input type="password" id="pw1" autocomplete="current-password" inputmode="text">
+
+  <!-- ---- B. Sign up ---- -->
+  <div id="scrSignup" class="hide">
+    <div class="brand">
+      <div class="bolt">⚡</div>
+      <h1>Create your account</h1>
+      <p>Takes a few seconds</p>
+    </div>
+    <div class="field">
+      <label for="suName">Your name</label>
+      <input type="text" id="suName" autocomplete="name" placeholder="e.g. Asif Raza">
+    </div>
+    <div class="field">
+      <label for="suPw1">Choose a password</label>
+      <input type="password" id="suPw1" autocomplete="new-password" placeholder="at least 4 characters">
+    </div>
+    <div class="field">
+      <label for="suPw2">Confirm password</label>
+      <input type="password" id="suPw2" autocomplete="new-password">
+    </div>
+    <label class="chk"><input type="checkbox" id="suShow" onchange="togglePw(['suPw1','suPw2'],this.checked)"> Show passwords</label>
+    <div class="msg" id="suMsg"></div>
+    <button class="btn" id="suBtn">Create account</button>
+    <div style="height:10px"></div>
+    <button class="btn ghost" onclick="showAuth('welcome')">Back</button>
+    <p class="hint">Write your password down somewhere safe. Because nothing is stored on a server, it cannot be emailed back to you.</p>
   </div>
-  <div class="field hide" id="pw2Wrap">
-    <label for="pw2">Confirm password</label>
-    <input type="password" id="pw2" autocomplete="new-password">
+
+  <!-- ---- C. Log in ---- -->
+  <div id="scrLogin" class="hide">
+    <div class="brand">
+      <div class="bolt">⚡</div>
+      <h1 id="liHello">Welcome back</h1>
+      <p>Enter your password to continue</p>
+    </div>
+    <div class="field">
+      <label for="liPw">Password</label>
+      <input type="password" id="liPw" autocomplete="current-password">
+    </div>
+    <label class="chk"><input type="checkbox" id="liShow" onchange="togglePw(['liPw'],this.checked)"> Show password</label>
+    <div class="msg" id="liMsg"></div>
+    <button class="btn" id="liBtn">Log in</button>
+    <p class="hint"><a href="#" onclick="showAuth('forgot');return false" style="color:var(--live)">Forgot your password?</a></p>
   </div>
-  <div class="msg" id="loginMsg"></div>
-  <button class="btn" id="loginBtn">Unlock</button>
-  <p class="hint" id="loginHint">Your readings stay on this phone. Nothing is uploaded.</p>
+
+  <!-- ---- D. Forgot password ---- -->
+  <div id="scrForgot" class="hide">
+    <div class="brand">
+      <div class="bolt">🔑</div>
+      <h1>Forgot password</h1>
+      <p>There is no server, so it cannot be reset by email</p>
+    </div>
+    <div class="card" style="text-align:left">
+      <h3>If you have a backup file</h3>
+      <p style="font-size:13px;color:var(--ink-dim);margin:0 0 12px">
+        Start fresh and load your backup. Every meter and reading in that file comes back.</p>
+      <button class="btn ghost" onclick="showAuth('restore')">Restore from a backup file</button>
+    </div>
+    <div class="card" style="text-align:left">
+      <h3>If you have no backup</h3>
+      <p style="font-size:13px;color:var(--ink-dim);margin:0 0 12px">
+        The only way in is to reset the app. <strong style="color:var(--danger)">This erases every meter and
+        reading on this phone permanently.</strong></p>
+      <button class="btn danger" onclick="hardReset()">Erase everything and start again</button>
+    </div>
+    <button class="btn ghost" onclick="showAuth('login')">Back to log in</button>
+  </div>
+
+  <!-- ---- E. Restore before login ---- -->
+  <div id="scrRestore" class="hide">
+    <div class="brand">
+      <div class="bolt">⛁</div>
+      <h1>Restore a backup</h1>
+      <p>Choose the .json backup file</p>
+    </div>
+    <button class="btn" onclick="document.getElementById('preImp').click()">Choose backup file</button>
+    <input type="file" id="preImp" accept=".json,application/json" class="hide">
+    <div class="msg" id="reMsg"></div>
+    <p class="hint">After restoring you will set a password for this phone.</p>
+    <div style="height:10px"></div>
+    <button class="btn ghost" onclick="showAuth(DB.pw ? 'login' : 'welcome')">Back</button>
+  </div>
+
 </div>
 
 <!-- ============================ APP ============================ -->
@@ -299,7 +384,7 @@ const KEY = "bijli.v1";
 let memStore = null;
 
 function blankDB(){
-  return {pw:"", meters:[], readings:{}, closings:[],
+  return {pw:"", userName:"", meters:[], readings:{}, closings:[],
           settings:{tariff:0, currency:"PKR", cycleStart:8, useCycle:true}, seq:1};
 }
 function load(){
@@ -440,60 +525,120 @@ const isClosed = (y,m) => DB.closings.some(c => c.year===y && c.month===m);
 /* =============================================================
    LOGIN  /  LOGOUT
    ============================================================= */
-let firstRun = !DB.pw;
+/* =============================================================
+   ACCOUNT: SIGN UP / LOG IN / FORGOT / LOG OUT
+   Screens: welcome, signup, login, forgot, restore
+   ============================================================= */
+const AUTH_SCREENS = ["Welcome","Signup","Login","Forgot","Restore"];
 
-function paintLogin(){
-  firstRun = !DB.pw;
-  document.getElementById("pw2Wrap").classList.toggle("hide", !firstRun);
-  document.getElementById("loginBtn").textContent = firstRun ? "Create password" : "Unlock";
-  document.getElementById("loginSub").textContent = firstRun
-    ? "Set a password to protect your readings"
-    : "Daily readings for every Pakistani electricity supplier";
-  document.getElementById("loginHint").textContent = firstRun
-    ? "Choose at least 4 characters. There is no way to recover it, so keep it somewhere safe."
-    : "Your readings stay on this phone. Nothing is uploaded.";
-  document.getElementById("loginMsg").textContent = "";
-  document.getElementById("pw1").value = "";
-  document.getElementById("pw2").value = "";
-}
-let tries = 0;
-async function doLogin(){
-  const msg = document.getElementById("loginMsg");
-  const p1 = document.getElementById("pw1").value;
-  if (firstRun){
-    if (p1.length < 4){ msg.textContent = "Use at least 4 characters."; return; }
-    if (p1 !== document.getElementById("pw2").value){
-      msg.textContent = "The two passwords do not match."; return;
-    }
-    DB.pw = await sha256(p1); save();
-    if (!DB.meters.length) seedDemo();
-    enterApp(); return;
+function showAuth(which){
+  AUTH_SCREENS.forEach(s =>
+    document.getElementById("scr"+s).classList.toggle("hide", s.toLowerCase() !== which));
+  const first = {welcome:null, signup:"suName", login:"liPw", forgot:null, restore:null}[which];
+  if (which === "login"){
+    document.getElementById("liHello").textContent =
+      DB.userName ? `Welcome back, ${DB.userName}` : "Welcome back";
+    document.getElementById("liMsg").textContent = "";
+    document.getElementById("liPw").value = "";
   }
-  if (await sha256(p1) === DB.pw){ tries = 0; enterApp(); return; }
-  tries++;
-  document.getElementById("pw1").value = "";
-  msg.textContent = tries >= 3
-    ? "Still not matching. If you have forgotten it, reinstall the app — your backup file can be imported afterwards."
-    : "That password does not match. Try again.";
+  if (which === "signup"){
+    document.getElementById("suMsg").textContent = "";
+  }
+  if (first) setTimeout(() => document.getElementById(first).focus(), 120);
 }
+function togglePw(ids, show){
+  ids.forEach(id => document.getElementById(id).type = show ? "text" : "password");
+}
+function paintLogin(){
+  // Decide which screen greets the user: signup if no account yet, else login.
+  showAuth(DB.pw ? "login" : "welcome");
+}
+
+/* ---- sign up ---- */
+document.getElementById("suBtn").onclick = async () => {
+  const msg = document.getElementById("suMsg");
+  const name = document.getElementById("suName").value.trim();
+  const p1 = document.getElementById("suPw1").value;
+  const p2 = document.getElementById("suPw2").value;
+  if (!name){ msg.textContent = "Please enter your name."; return; }
+  if (p1.length < 4){ msg.textContent = "Password must be at least 4 characters."; return; }
+  if (p1 !== p2){ msg.textContent = "The two passwords do not match."; return; }
+  DB.userName = name;
+  DB.pw = await sha256(p1);
+  save();
+  if (!DB.meters.length) seedDemo();
+  toast(`Account created. Welcome, ${name}!`);
+  enterApp();
+};
+
+/* ---- log in ---- */
+let tries = 0;
+document.getElementById("liBtn").onclick = async () => {
+  const msg = document.getElementById("liMsg");
+  const pw = document.getElementById("liPw").value;
+  if (await sha256(pw) === DB.pw){ tries = 0; enterApp(); return; }
+  tries++;
+  document.getElementById("liPw").value = "";
+  msg.textContent = tries >= 3
+    ? "Still not matching. Use 'Forgot your password?' below."
+    : "That password does not match. Try again.";
+};
+["suName","suPw1","suPw2"].forEach(id =>
+  document.getElementById(id).addEventListener("keydown",
+    e => { if (e.key === "Enter") document.getElementById("suBtn").click(); }));
+document.getElementById("liPw").addEventListener("keydown",
+  e => { if (e.key === "Enter") document.getElementById("liBtn").click(); });
+
+/* ---- forgot password: full reset (last resort) ---- */
+function hardReset(){
+  if (!confirm("Erase EVERYTHING on this phone?\n\nAll meters, all readings, all closed months will be permanently deleted. This cannot be undone.")) return;
+  if (!confirm("Final confirmation.\n\nAre you completely sure? There is no way back after this.")) return;
+  memStore = blankDB();
+  DB = memStore; save();
+  toast("App reset");
+  showAuth("welcome");
+}
+
+/* ---- restore a backup before logging in ---- */
+document.getElementById("preImp").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const msg = document.getElementById("reMsg");
+  const r = new FileReader();
+  r.onload = () => {
+    try{
+      const d = JSON.parse(r.result);
+      if (!d.meters || !d.readings) throw new Error("bad file");
+      if (!confirm(`Restore this backup?\n\n${d.meters.length} meter(s)\nSaved ${d.exportedOn || "unknown date"}\n\nAnything currently on this phone will be replaced.`)) return;
+      memStore = Object.assign(blankDB(), d);
+      DB = memStore;
+      // A restored file may carry its own password; either way the user
+      // now signs up so THIS phone has a password they just chose.
+      DB.pw = ""; DB.userName = DB.userName || "";
+      save();
+      toast("Backup restored — now set your password");
+      showAuth("signup");
+    }catch(err){ msg.textContent = "That file could not be read as a backup."; }
+  };
+  r.readAsText(f);
+  e.target.value = "";
+};
+
 function enterApp(){
   document.getElementById("login").classList.add("hide");
   document.getElementById("app").classList.remove("hide");
   go("today");
 }
+
+/* ---- log out (header button; also linked from Backup screen) ---- */
 function logout(){
   document.getElementById("app").classList.add("hide");
   document.getElementById("login").classList.remove("hide");
   paintLogin();
-  setTimeout(() => document.getElementById("pw1").focus(), 100);
   toast("Logged out");
 }
-document.getElementById("loginBtn").onclick = doLogin;
 document.getElementById("logoutBtn").onclick = () => {
-  if (confirm("Log out of Bijli Meter Tracker?\n\nYour saved readings stay on this phone.")) logout();
+  if (confirm("Log out of Bijli Meter Tracker?\n\nYour saved readings stay safely on this phone.")) logout();
 };
-["pw1","pw2"].forEach(id => document.getElementById(id).addEventListener("keydown",
-  e => { if (e.key === "Enter") doLogin(); }));
 
 /* One example meter so a new user sees how it works, not an empty screen. */
 function seedDemo(){
@@ -948,10 +1093,14 @@ function vData(v){
     </div>
 
     <div class="card">
-      <h3>Security</h3>
+      <h3>Account</h3>
+      <div class="row"><span class="k">Signed in as</span><span class="v">${esc(DB.userName || "—")}</span></div>
+      <div style="height:6px"></div>
+      <button class="btn ghost" onclick="changeName()">Change name</button>
+      <div style="height:9px"></div>
       <button class="btn ghost" onclick="changePw()">Change password</button>
       <div style="height:9px"></div>
-      <button class="btn ghost" onclick="document.getElementById('logoutBtn').click()">Log out</button>
+      <button class="btn" onclick="document.getElementById('logoutBtn').click()">Log out</button>
     </div>
 
     <div class="card">
@@ -1027,6 +1176,20 @@ function changePw(){
       msg.textContent = "The two new passwords do not match."; return;
     }
     DB.pw = await sha256(n1); save(); closeSheet(); toast("Password changed");
+  };
+}
+
+function changeName(){
+  sheet(`
+    <h3>Change name</h3>
+    <p class="sub">Shown on the login screen</p>
+    <div class="field"><label for="n_new">Your name</label>
+      <input type="text" id="n_new" value="${esc(DB.userName||"")}"></div>
+    <button class="btn" id="n_go">Save</button>`);
+  document.getElementById("n_go").onclick = () => {
+    const n = document.getElementById("n_new").value.trim();
+    if (!n){ toast("Enter a name"); return; }
+    DB.userName = n; save(); closeSheet(); render(); toast("Name updated");
   };
 }
 
