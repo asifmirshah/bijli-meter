@@ -10,7 +10,7 @@
 <meta name="description" content="Track daily electricity meter readings for any Pakistani distribution company. Works offline.">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Bijli Meter Tracker</title>
+<title>Bijli Meter Tracker | بجلی میٹر</title>
 <style>
 /* ============================================================
    Design tokens
@@ -213,6 +213,22 @@ td.cum{color:var(--meas)}
 .chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-dim);margin:2px 0 6px}
 .chk input{width:18px;height:18px;accent-color:var(--live)}
 
+.langBtn{
+  position:absolute;top:calc(14px + var(--safe-t));inset-inline-end:16px;z-index:110;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:9px;
+  padding:7px 14px;font-size:13px;font-weight:700;color:var(--live);
+}
+[dir=rtl] body, [dir=rtl] input, [dir=rtl] select, [dir=rtl] button, [dir=rtl] textarea{
+  font-family:"Noto Nastaliq Urdu","Jameel Noori Nastaleeq","Noto Naskh Arabic",
+              "Urdu Typesetting",-apple-system,"Segoe UI",sans-serif;
+}
+[dir=rtl] body{line-height:1.9}
+[dir=rtl] .register, [dir=rtl] .mc-meta, [dir=rtl] table, [dir=rtl] .big,
+[dir=rtl] input[type=number], [dir=rtl] input[type=date]{direction:ltr}
+[dir=rtl] th, [dir=rtl] td{font-family:var(--mono)}
+[dir=rtl] th{font-family:inherit}
+[dir=rtl] nav button{font-size:11px}
+
 /* ---------- toast ---------- */
 #toast{
   position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + var(--safe-b));
@@ -227,45 +243,46 @@ td.cum{color:var(--meas)}
 
 <!-- ============================ WELCOME / SIGN UP / LOG IN ============================ -->
 <div id="login">
+  <button class="langBtn" onclick="toggleLang()">اردو</button>
 
   <!-- ---- A. Welcome: shown when nobody has signed up yet ---- -->
   <div id="scrWelcome">
     <div class="brand">
       <div class="bolt">⚡</div>
-      <h1>Bijli Meter Tracker</h1>
-      <p>Track your daily units for any electricity supplier in Pakistan</p>
+      <h1 data-i18n="appName">Bijli Meter Tracker</h1>
+      <p data-i18n="tagline">Track your daily units for any electricity supplier in Pakistan</p>
     </div>
-    <button class="btn" onclick="showAuth('signup')">Create an account</button>
+    <button class="btn" onclick="showAuth('signup')" data-i18n="createAccount">Create an account</button>
     <div style="height:10px"></div>
-    <button class="btn ghost" onclick="showAuth('restore')">I already have a backup file</button>
-    <p class="hint">Everything is stored on this phone only. No internet, no accounts on any server, nothing uploaded.</p>
+    <button class="btn ghost" onclick="showAuth('restore')" data-i18n="haveBackup">I already have a backup file</button>
+    <p class="hint" data-i18n="privacyNote">Everything is stored on this phone only.</p>
   </div>
 
   <!-- ---- B. Sign up ---- -->
   <div id="scrSignup" class="hide">
     <div class="brand">
       <div class="bolt">⚡</div>
-      <h1>Create your account</h1>
-      <p>Takes a few seconds</p>
+      <h1 data-i18n="suTitle">Create your account</h1>
+      <p data-i18n="suSub">Takes a few seconds</p>
     </div>
     <div class="field">
-      <label for="suName">Your name</label>
-      <input type="text" id="suName" autocomplete="name" placeholder="e.g. Asif Raza">
+      <label for="suName" data-i18n="yourName">Your name</label>
+      <input type="text" id="suName" autocomplete="name" data-i18n-ph="namePh" placeholder="e.g. Asif Raza">
     </div>
     <div class="field">
-      <label for="suPw1">Choose a password</label>
-      <input type="password" id="suPw1" autocomplete="new-password" placeholder="at least 4 characters">
+      <label for="suPw1" data-i18n="choosePw">Choose a password</label>
+      <input type="password" id="suPw1" autocomplete="new-password" data-i18n-ph="pwPh" placeholder="at least 4 characters">
     </div>
     <div class="field">
-      <label for="suPw2">Confirm password</label>
+      <label for="suPw2" data-i18n="confirmPw">Confirm password</label>
       <input type="password" id="suPw2" autocomplete="new-password">
     </div>
-    <label class="chk"><input type="checkbox" id="suShow" onchange="togglePw(['suPw1','suPw2'],this.checked)"> Show passwords</label>
+    <label class="chk"><input type="checkbox" id="suShow" onchange="togglePw(['suPw1','suPw2'],this.checked)"> <span data-i18n="showPw">Show passwords</span></label>
     <div class="msg" id="suMsg"></div>
-    <button class="btn" id="suBtn">Create account</button>
+    <button class="btn" id="suBtn" data-i18n="createAccount">Create account</button>
     <div style="height:10px"></div>
-    <button class="btn ghost" onclick="showAuth('welcome')">Back</button>
-    <p class="hint">Write your password down somewhere safe. Because nothing is stored on a server, it cannot be emailed back to you.</p>
+    <button class="btn ghost" onclick="showAuth('welcome')" data-i18n="back">Back</button>
+    <p class="hint" data-i18n="suHint">Write your password down somewhere safe.</p>
   </div>
 
   <!-- ---- C. Log in ---- -->
@@ -273,54 +290,53 @@ td.cum{color:var(--meas)}
     <div class="brand">
       <div class="bolt">⚡</div>
       <h1 id="liHello">Welcome back</h1>
-      <p>Enter your password to continue</p>
+      <p data-i18n="liSub">Enter your password to continue</p>
     </div>
     <div class="field">
-      <label for="liPw">Password</label>
+      <label for="liPw" data-i18n="password">Password</label>
       <input type="password" id="liPw" autocomplete="current-password">
     </div>
-    <label class="chk"><input type="checkbox" id="liShow" onchange="togglePw(['liPw'],this.checked)"> Show password</label>
+    <label class="chk"><input type="checkbox" id="liShow" onchange="togglePw(['liPw'],this.checked)"> <span data-i18n="showPw1">Show password</span></label>
     <div class="msg" id="liMsg"></div>
-    <button class="btn" id="liBtn">Log in</button>
-    <p class="hint"><a href="#" onclick="showAuth('forgot');return false" style="color:var(--live)">Forgot your password?</a></p>
+    <button class="btn" id="liBtn" data-i18n="logIn">Log in</button>
+    <p class="hint"><a href="#" onclick="showAuth('forgot');return false" style="color:var(--live)"><span data-i18n="forgotQ">Forgot your password?</span></a></p>
   </div>
 
   <!-- ---- D. Forgot password ---- -->
   <div id="scrForgot" class="hide">
     <div class="brand">
       <div class="bolt">🔑</div>
-      <h1>Forgot password</h1>
-      <p>There is no server, so it cannot be reset by email</p>
+      <h1 data-i18n="fgTitle">Forgot password</h1>
+      <p data-i18n="fgSub">There is no server, so it cannot be reset by email</p>
     </div>
     <div class="card" style="text-align:left">
-      <h3>If you have a backup file</h3>
+      <h3 data-i18n="fgHaveBk">If you have a backup file</h3>
       <p style="font-size:13px;color:var(--ink-dim);margin:0 0 12px">
-        Start fresh and load your backup. Every meter and reading in that file comes back.</p>
-      <button class="btn ghost" onclick="showAuth('restore')">Restore from a backup file</button>
+        <span data-i18n="fgHaveBkTxt">Start fresh and load your backup.</span></p>
+      <button class="btn ghost" onclick="showAuth('restore')" data-i18n="fgRestore">Restore from a backup file</button>
     </div>
     <div class="card" style="text-align:left">
-      <h3>If you have no backup</h3>
+      <h3 data-i18n="fgNoBk">If you have no backup</h3>
       <p style="font-size:13px;color:var(--ink-dim);margin:0 0 12px">
-        The only way in is to reset the app. <strong style="color:var(--danger)">This erases every meter and
-        reading on this phone permanently.</strong></p>
-      <button class="btn danger" onclick="hardReset()">Erase everything and start again</button>
+        <span data-i18n="fgNoBkTxt">The only way in is to reset the app.</span></p>
+      <button class="btn danger" onclick="hardReset()" data-i18n="fgErase">Erase everything and start again</button>
     </div>
-    <button class="btn ghost" onclick="showAuth('login')">Back to log in</button>
+    <button class="btn ghost" onclick="showAuth('login')" data-i18n="backToLogin">Back to log in</button>
   </div>
 
   <!-- ---- E. Restore before login ---- -->
   <div id="scrRestore" class="hide">
     <div class="brand">
       <div class="bolt">⛁</div>
-      <h1>Restore a backup</h1>
-      <p>Choose the .json backup file</p>
+      <h1 data-i18n="reTitle">Restore a backup</h1>
+      <p data-i18n="reSub">Choose the .json backup file</p>
     </div>
-    <button class="btn" onclick="document.getElementById('preImp').click()">Choose backup file</button>
+    <button class="btn" onclick="document.getElementById('preImp').click()" data-i18n="reChoose">Choose backup file</button>
     <input type="file" id="preImp" accept=".json,application/json" class="hide">
     <div class="msg" id="reMsg"></div>
-    <p class="hint">After restoring you will set a password for this phone.</p>
+    <p class="hint" data-i18n="reHint">After restoring you will set a password for this phone.</p>
     <div style="height:10px"></div>
-    <button class="btn ghost" onclick="showAuth(DB.pw ? 'login' : 'welcome')">Back</button>
+    <button class="btn ghost" onclick="showAuth(DB.pw ? 'login' : 'welcome')" data-i18n="back">Back</button>
   </div>
 
 </div>
@@ -338,10 +354,10 @@ td.cum{color:var(--meas)}
   <main id="view"></main>
 
   <nav>
-    <button data-tab="today" class="on"><span class="i">⚡</span>Today</button>
-    <button data-tab="meters"><span class="i">▦</span>Meters</button>
-    <button data-tab="report"><span class="i">▤</span>Report</button>
-    <button data-tab="data"><span class="i">⛁</span>Backup</button>
+    <button data-tab="today" class="on"><span class="i">⚡</span><span data-i18n="tabToday">Today</span></button>
+    <button data-tab="meters"><span class="i">▦</span><span data-i18n="tabMeters">Meters</span></button>
+    <button data-tab="report"><span class="i">▤</span><span data-i18n="tabReport">Report</span></button>
+    <button data-tab="data"><span class="i">⛁</span><span data-i18n="tabBackup">Backup</span></button>
   </nav>
 </div>
 
@@ -350,6 +366,190 @@ td.cum{color:var(--meas)}
 
 <script>
 "use strict";
+
+
+/* =============================================================
+   LANGUAGE  (English / Urdu)
+   ============================================================= */
+const STR = {
+en: {
+  appName:"Bijli Meter Tracker", tagline:"Track your daily units for any electricity supplier in Pakistan",
+  createAccount:"Create an account", haveBackup:"I already have a backup file",
+  privacyNote:"Everything is stored on this phone only. No internet, no accounts on any server, nothing uploaded.",
+  suTitle:"Create your account", suSub:"Takes a few seconds", yourName:"Your name", namePh:"e.g. Asif Raza",
+  choosePw:"Choose a password", pwPh:"at least 4 characters", confirmPw:"Confirm password",
+  showPw:"Show passwords", showPw1:"Show password", back:"Back",
+  suHint:"Write your password down somewhere safe. Because nothing is stored on a server, it cannot be emailed back to you.",
+  welcomeBack:"Welcome back", welcomeBackName:"Welcome back, {n}", liSub:"Enter your password to continue",
+  password:"Password", logIn:"Log in", forgotQ:"Forgot your password?",
+  fgTitle:"Forgot password", fgSub:"There is no server, so it cannot be reset by email",
+  fgHaveBk:"If you have a backup file",
+  fgHaveBkTxt:"Start fresh and load your backup. Every meter and reading in that file comes back.",
+  fgRestore:"Restore from a backup file", fgNoBk:"If you have no backup",
+  fgNoBkTxt:"The only way in is to reset the app. This erases every meter and reading on this phone permanently.",
+  fgErase:"Erase everything and start again", backToLogin:"Back to log in",
+  reTitle:"Restore a backup", reSub:"Choose the .json backup file", reChoose:"Choose backup file",
+  reHint:"After restoring you will set a password for this phone.",
+  tabToday:"Today", tabMeters:"Meters", tabReport:"Report", tabBackup:"Backup",
+  meter:"meter", meters:"meters", connections:"connections",
+  addFirstMeter:"Add your first meter to start tracking daily units.", goMeters:"Go to Meters",
+  totalUnitsDay:"Total units on this day", units:"units", unitsToday:"Units today",
+  tapToEnter:"Tap to enter reading", previous:"Previous",
+  showing:"Showing", jumpToday:"jump to today",
+  monthClosedBanner:"This month is closed. Reopen it from the Report tab before editing.",
+  prevReading:"Previous reading", recordedOn:"Recorded on", readingNow:"Reading now on the meter",
+  saveReading:"Save reading", deleteReading:"Delete this reading",
+  sinceMsg:"That is {u} units since {d}.", highMsg:" That looks high — please check the digits.",
+  monthClosedT:"That month is closed", enterFirst:"Enter the reading first",
+  readingSaved:"Reading saved", readingDeleted:"Reading deleted",
+  delReadingQ:"Delete the reading dated {d} for this meter?",
+  addMeter:"Add a meter", editMeter:"Edit meter", noMeters:"No meters yet.",
+  editApplies:"Changes apply to future calculations", takeFromBill:"Take these details from your latest bill",
+  connName:"Name this connection", connPh:"Home, Shop, Tubewell", supplier:"Electricity supplier",
+  meterNo:"Meter number", meterNoPh:"as printed on the bill", consumerId:"Consumer ID", refNo:"Reference no",
+  opening:"Opening reading", readingDate:"Reading date", mf:"Multiplier (MF)", digits:"Dial digits",
+  includeMeter:"Include this meter in daily tracking", saveChanges:"Save changes",
+  deleteMeterBtn:"Delete meter and its readings", nameNeeded:"Give this connection a name",
+  meterUpdated:"Meter updated", meterAdded:"Meter added", meterDeleted:"Meter deleted",
+  delMeterQ:"Delete this meter and every reading recorded for it?", paused:"paused",
+  addToSee:"Add a meter to see monthly reports.",
+  billCycle:"Bill cycle", calMonth:"Calendar month", unitsMonth:"Units this month",
+  estimated:"Estimated {c} {v} at {t} per unit",
+  closedOnBanner:"Closed on {d}. Readings are locked.",
+  dayByDay:"Day by day", date:"Date", day:"Day", totalSoFar:"Total so far", total:"Total",
+  monthClosing:"Month closing", openCol:"Opening", closeCol:"Closing", unitsCol:"Units", share:"Share",
+  daysWith:"Days with a reading", of:"of", avgDay:"Average per reading day", highDay:"Highest day",
+  exportCsv:"Export this report as CSV", reopenMonth:"Reopen this month", closeMonth:"Close this month",
+  closeQ:"Close {m} {y}?\n\n{f} to {t}\nTotal {u} units\n\nReadings in this period will be locked.",
+  reopenQ:"Reopen {m} {y} for editing?", monthClosedOk:"Month closed", monthReopened:"Month reopened",
+  csvSaved:"CSV saved to your downloads",
+  yourData:"Your data", metersK:"Meters", readingsRec:"Readings recorded", monthsClosed:"Months closed",
+  stored:"Stored", onPhone:"On this phone only",
+  bkTitle:"Backup and restore",
+  bkTxt:"Save a backup file, then keep it in Google Drive or WhatsApp yourself. A backup that only exists on this phone will not help if the phone is lost.",
+  bkSave:"Save a backup file", bkRestore:"Restore from a backup file", bkAll:"Export every reading as CSV",
+  bkSaved:"Backup file saved", bkRestored:"Backup restored",
+  restoreQ:"Restore this backup?\n\n{n} meters\nSaved {d}\n\nYour current data will be replaced.",
+  badFile:"That file could not be read as a backup.",
+  billing:"Billing", tariff:"Tariff per unit", currency:"Currency", cycleStart:"Bill cycle starts on",
+  billingTxt:"Set this to the reading date printed on your bill, so the report matches your billing period. Suppliers charge in slabs, so the estimate is a guide, not the exact bill.",
+  saveBilling:"Save billing settings", billingSaved:"Billing settings saved",
+  account:"Account", signedIn:"Signed in as", changeName:"Change name", changePw:"Change password",
+  logOut:"Log out", loggedOut:"Logged out",
+  logOutQ:"Log out of Bijli Meter Tracker?\n\nYour saved readings stay safely on this phone.",
+  language:"Language", suppliersCovered:"Suppliers covered",
+  disclaimer:"An independent tracking tool. Not affiliated with, endorsed by, or connected to any distribution company, PEPCO or WAPDA. Readings are entered by you.",
+  cnTitle:"Change name", cnSub:"Shown on the login screen", save:"Save", enterName:"Enter a name",
+  nameUpdated:"Name updated",
+  cpSub:"You will use the new one next time you open the app", curPw:"Current password",
+  newPw:"New password", newPwMin:"New password (min 4 chars)", confirmNew:"Confirm new password",
+  savePw:"Save new password", pwChanged:"Password changed",
+  wrongCur:"The current password does not match.", tooShort:"Use at least 4 characters.",
+  noMatch:"The two passwords do not match.", wrongPw:"That password does not match. Try again.",
+  wrongPw3:"Still not matching. Use 'Forgot your password?' below.",
+  pwMin:"Password must be at least 4 characters.", enterNameMsg:"Please enter your name.",
+  accountMade:"Account created. Welcome, {n}!",
+  months:["January","February","March","April","May","June","July","August","September","October","November","December"]
+},
+ur: {
+  appName:"بجلی میٹر ٹریکر", tagline:"پاکستان کی کسی بھی بجلی کمپنی کے روزانہ یونٹس کا حساب رکھیں",
+  createAccount:"اکاؤنٹ بنائیں", haveBackup:"میرے پاس بیک اپ فائل موجود ہے",
+  privacyNote:"تمام ڈیٹا صرف اسی فون پر محفوظ رہتا ہے۔ نہ انٹرنیٹ، نہ کسی سرور پر اکاؤنٹ، نہ کچھ اپ لوڈ ہوتا ہے۔",
+  suTitle:"اپنا اکاؤنٹ بنائیں", suSub:"صرف چند سیکنڈ لگیں گے", yourName:"آپ کا نام", namePh:"مثلاً آصف رضا",
+  choosePw:"پاس ورڈ منتخب کریں", pwPh:"کم از کم 4 حروف", confirmPw:"پاس ورڈ کی تصدیق کریں",
+  showPw:"پاس ورڈ دکھائیں", showPw1:"پاس ورڈ دکھائیں", back:"واپس",
+  suHint:"اپنا پاس ورڈ کہیں محفوظ لکھ لیں۔ چونکہ کچھ بھی سرور پر محفوظ نہیں ہوتا، اس لیے یہ ای میل سے واپس نہیں مل سکتا۔",
+  welcomeBack:"خوش آمدید", welcomeBackName:"خوش آمدید، {n}", liSub:"جاری رکھنے کے لیے اپنا پاس ورڈ درج کریں",
+  password:"پاس ورڈ", logIn:"لاگ ان", forgotQ:"پاس ورڈ بھول گئے؟",
+  fgTitle:"پاس ورڈ بھول گئے", fgSub:"کوئی سرور نہیں ہے، اس لیے ای میل سے ری سیٹ ممکن نہیں",
+  fgHaveBk:"اگر آپ کے پاس بیک اپ فائل ہے",
+  fgHaveBkTxt:"نئے سرے سے شروع کر کے اپنا بیک اپ لوڈ کریں۔ اس فائل کا ہر میٹر اور ہر ریڈنگ واپس آ جائے گی۔",
+  fgRestore:"بیک اپ فائل سے بحال کریں", fgNoBk:"اگر بیک اپ موجود نہیں",
+  fgNoBkTxt:"واحد راستہ ایپ کو ری سیٹ کرنا ہے۔ اس سے اس فون کے تمام میٹر اور ریڈنگز ہمیشہ کے لیے مٹ جائیں گی۔",
+  fgErase:"سب کچھ مٹا کر دوبارہ شروع کریں", backToLogin:"لاگ ان پر واپس",
+  reTitle:"بیک اپ بحال کریں", reSub:"‎.json بیک اپ فائل منتخب کریں", reChoose:"بیک اپ فائل منتخب کریں",
+  reHint:"بحالی کے بعد آپ اس فون کے لیے پاس ورڈ مقرر کریں گے۔",
+  tabToday:"آج", tabMeters:"میٹرز", tabReport:"رپورٹ", tabBackup:"بیک اپ",
+  meter:"میٹر", meters:"میٹرز", connections:"کنکشنز",
+  addFirstMeter:"روزانہ یونٹس کا حساب شروع کرنے کے لیے پہلا میٹر شامل کریں۔", goMeters:"میٹرز پر جائیں",
+  totalUnitsDay:"اس دن کے کل یونٹس", units:"یونٹس", unitsToday:"آج کے یونٹس",
+  tapToEnter:"ریڈنگ درج کرنے کے لیے دبائیں", previous:"پچھلی",
+  showing:"دکھایا جا رہا ہے", jumpToday:"آج پر جائیں",
+  monthClosedBanner:"یہ مہینہ بند ہے۔ ترمیم سے پہلے رپورٹ ٹیب سے دوبارہ کھولیں۔",
+  prevReading:"پچھلی ریڈنگ", recordedOn:"تاریخِ اندراج", readingNow:"میٹر پر موجودہ ریڈنگ",
+  saveReading:"ریڈنگ محفوظ کریں", deleteReading:"یہ ریڈنگ حذف کریں",
+  sinceMsg:"{d} سے اب تک {u} یونٹس بنتے ہیں۔", highMsg:" یہ زیادہ لگ رہے ہیں — ہندسے دوبارہ دیکھ لیں۔",
+  monthClosedT:"وہ مہینہ بند ہے", enterFirst:"پہلے ریڈنگ درج کریں",
+  readingSaved:"ریڈنگ محفوظ ہو گئی", readingDeleted:"ریڈنگ حذف ہو گئی",
+  delReadingQ:"کیا {d} کی ریڈنگ اس میٹر سے حذف کر دیں؟",
+  addMeter:"میٹر شامل کریں", editMeter:"میٹر میں ترمیم", noMeters:"ابھی کوئی میٹر نہیں۔",
+  editApplies:"تبدیلیاں آئندہ حساب پر لاگو ہوں گی", takeFromBill:"یہ تفصیلات اپنے تازہ بل سے لیں",
+  connName:"اس کنکشن کا نام", connPh:"گھر، دکان، ٹیوب ویل", supplier:"بجلی کمپنی",
+  meterNo:"میٹر نمبر", meterNoPh:"جیسا بل پر درج ہے", consumerId:"کنزیومر آئی ڈی", refNo:"ریفرنس نمبر",
+  opening:"ابتدائی ریڈنگ", readingDate:"ریڈنگ کی تاریخ", mf:"ضربی عدد (MF)", digits:"ڈائل کے ہندسے",
+  includeMeter:"اس میٹر کو روزانہ حساب میں شامل رکھیں", saveChanges:"تبدیلیاں محفوظ کریں",
+  deleteMeterBtn:"میٹر اور اس کی تمام ریڈنگز حذف کریں", nameNeeded:"اس کنکشن کا نام لکھیں",
+  meterUpdated:"میٹر اپ ڈیٹ ہو گیا", meterAdded:"میٹر شامل ہو گیا", meterDeleted:"میٹر حذف ہو گیا",
+  delMeterQ:"کیا یہ میٹر اور اس کی ہر ریڈنگ حذف کر دیں؟", paused:"غیر فعال",
+  addToSee:"ماہانہ رپورٹ دیکھنے کے لیے میٹر شامل کریں۔",
+  billCycle:"بل سائیکل", calMonth:"کیلنڈر مہینہ", unitsMonth:"اس ماہ کے یونٹس",
+  estimated:"تخمینہ {c} {v} بحساب {t} فی یونٹ",
+  closedOnBanner:"{d} کو بند کیا گیا۔ ریڈنگز مقفل ہیں۔",
+  dayByDay:"روزانہ تفصیل", date:"تاریخ", day:"دن", totalSoFar:"مجموعی", total:"کل",
+  monthClosing:"ماہانہ کلوزنگ", openCol:"ابتدائی", closeCol:"اختتامی", unitsCol:"یونٹس", share:"حصہ",
+  daysWith:"ریڈنگ والے دن", of:"از", avgDay:"فی ریڈنگ دن اوسط", highDay:"سب سے زیادہ دن",
+  exportCsv:"یہ رپورٹ CSV میں محفوظ کریں", reopenMonth:"مہینہ دوبارہ کھولیں", closeMonth:"مہینہ بند کریں",
+  closeQ:"{m} {y} بند کریں؟\n\n{f} تا {t}\nکل {u} یونٹس\n\nاس مدت کی ریڈنگز مقفل ہو جائیں گی۔",
+  reopenQ:"{m} {y} ترمیم کے لیے دوبارہ کھولیں؟", monthClosedOk:"مہینہ بند ہو گیا", monthReopened:"مہینہ دوبارہ کھل گیا",
+  csvSaved:"CSV ڈاؤن لوڈز میں محفوظ ہو گئی",
+  yourData:"آپ کا ڈیٹا", metersK:"میٹرز", readingsRec:"درج شدہ ریڈنگز", monthsClosed:"بند مہینے",
+  stored:"محفوظ", onPhone:"صرف اسی فون پر",
+  bkTitle:"بیک اپ اور بحالی",
+  bkTxt:"بیک اپ فائل محفوظ کریں اور خود گوگل ڈرائیو یا واٹس ایپ میں رکھیں۔ جو بیک اپ صرف اسی فون پر ہو، فون گم ہونے پر کام نہیں آئے گا۔",
+  bkSave:"بیک اپ فائل محفوظ کریں", bkRestore:"بیک اپ فائل سے بحال کریں", bkAll:"تمام ریڈنگز CSV میں",
+  bkSaved:"بیک اپ فائل محفوظ ہو گئی", bkRestored:"بیک اپ بحال ہو گیا",
+  restoreQ:"یہ بیک اپ بحال کریں؟\n\n{n} میٹر\nمحفوظ شدہ {d}\n\nموجودہ ڈیٹا تبدیل ہو جائے گا۔",
+  badFile:"یہ فائل بیک اپ کے طور پر نہیں پڑھی جا سکی۔",
+  billing:"بلنگ", tariff:"فی یونٹ ٹیرف", currency:"کرنسی", cycleStart:"بل سائیکل شروع ہونے کا دن",
+  billingTxt:"یہاں وہی تاریخ رکھیں جو آپ کے بل پر ریڈنگ کی تاریخ ہے تاکہ رپورٹ آپ کے بلنگ دورانیے سے ملے۔ کمپنیاں سلیب کے حساب سے چارج کرتی ہیں، اس لیے یہ تخمینہ رہنمائی ہے، حتمی بل نہیں۔",
+  saveBilling:"بلنگ سیٹنگز محفوظ کریں", billingSaved:"بلنگ سیٹنگز محفوظ ہو گئیں",
+  account:"اکاؤنٹ", signedIn:"لاگ ان بنام", changeName:"نام تبدیل کریں", changePw:"پاس ورڈ تبدیل کریں",
+  logOut:"لاگ آؤٹ", loggedOut:"لاگ آؤٹ ہو گئے",
+  logOutQ:"بجلی میٹر ٹریکر سے لاگ آؤٹ کریں؟\n\nآپ کی محفوظ ریڈنگز اسی فون پر موجود رہیں گی۔",
+  language:"زبان", suppliersCovered:"شامل کمپنیاں",
+  disclaimer:"یہ ایک آزاد حساب کتاب کی ایپ ہے۔ کسی بھی ڈسٹری بیوشن کمپنی، پیپکو یا واپڈا سے اس کا کوئی تعلق یا توثیق نہیں۔ ریڈنگز آپ خود درج کرتے ہیں۔",
+  cnTitle:"نام تبدیل کریں", cnSub:"لاگ ان اسکرین پر دکھایا جاتا ہے", save:"محفوظ کریں", enterName:"نام لکھیں",
+  nameUpdated:"نام تبدیل ہو گیا",
+  cpSub:"اگلی بار ایپ کھولنے پر نیا پاس ورڈ استعمال ہوگا", curPw:"موجودہ پاس ورڈ",
+  newPw:"نیا پاس ورڈ", newPwMin:"نیا پاس ورڈ (کم از کم 4 حروف)", confirmNew:"نئے پاس ورڈ کی تصدیق",
+  savePw:"نیا پاس ورڈ محفوظ کریں", pwChanged:"پاس ورڈ تبدیل ہو گیا",
+  wrongCur:"موجودہ پاس ورڈ درست نہیں۔", tooShort:"کم از کم 4 حروف استعمال کریں۔",
+  noMatch:"دونوں پاس ورڈ ایک جیسے نہیں۔", wrongPw:"پاس ورڈ درست نہیں۔ دوبارہ کوشش کریں۔",
+  wrongPw3:"پھر بھی درست نہیں۔ نیچے 'پاس ورڈ بھول گئے؟' استعمال کریں۔",
+  pwMin:"پاس ورڈ کم از کم 4 حروف کا ہونا چاہیے۔", enterNameMsg:"براہ کرم اپنا نام لکھیں۔",
+  accountMade:"اکاؤنٹ بن گیا۔ خوش آمدید، {n}!",
+  months:["جنوری","فروری","مارچ","اپریل","مئی","جون","جولائی","اگست","ستمبر","اکتوبر","نومبر","دسمبر"]
+}};
+let lang = "en";
+function t(key, vars){
+  let s = (STR[lang] && STR[lang][key]) != null ? STR[lang][key] : STR.en[key];
+  if (s == null) s = key;
+  if (vars) for (const k in vars) s = s.split("{"+k+"}").join(vars[k]);
+  return s;
+}
+function monthName(i){ return t("months")[i]; }
+function applyLang(newLang, rerender){
+  lang = (newLang === "ur") ? "ur" : "en";
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "ur" ? "rtl" : "ltr";
+  document.querySelectorAll("[data-i18n]").forEach(n => n.textContent = t(n.dataset.i18n));
+  document.querySelectorAll("[data-i18n-ph]").forEach(n => n.placeholder = t(n.dataset.i18nPh));
+  document.querySelectorAll(".langBtn").forEach(b => b.textContent = lang === "ur" ? "English" : "اردو");
+  if (DB && DB.settings){ DB.settings.lang = lang; save(); }
+  if (rerender !== false && typeof render === "function"
+      && !document.getElementById("app").classList.contains("hide")) render();
+}
+function toggleLang(){ applyLang(lang === "ur" ? "en" : "ur"); }
 
 /* =============================================================
    DISTRIBUTION COMPANIES
@@ -385,7 +585,7 @@ let memStore = null;
 
 function blankDB(){
   return {pw:"", userName:"", meters:[], readings:{}, closings:[],
-          settings:{tariff:0, currency:"PKR", cycleStart:8, useCycle:true}, seq:1};
+          settings:{tariff:0, currency:"PKR", cycleStart:8, useCycle:true, lang:"en"}, seq:1};
 }
 function load(){
   if (memStore) return memStore;
@@ -537,7 +737,7 @@ function showAuth(which){
   const first = {welcome:null, signup:"suName", login:"liPw", forgot:null, restore:null}[which];
   if (which === "login"){
     document.getElementById("liHello").textContent =
-      DB.userName ? `Welcome back, ${DB.userName}` : "Welcome back";
+      DB.userName ? t("welcomeBackName", {n:DB.userName}) : t("welcomeBack");
     document.getElementById("liMsg").textContent = "";
     document.getElementById("liPw").value = "";
   }
@@ -560,14 +760,14 @@ document.getElementById("suBtn").onclick = async () => {
   const name = document.getElementById("suName").value.trim();
   const p1 = document.getElementById("suPw1").value;
   const p2 = document.getElementById("suPw2").value;
-  if (!name){ msg.textContent = "Please enter your name."; return; }
-  if (p1.length < 4){ msg.textContent = "Password must be at least 4 characters."; return; }
-  if (p1 !== p2){ msg.textContent = "The two passwords do not match."; return; }
+  if (!name){ msg.textContent = t("enterNameMsg"); return; }
+  if (p1.length < 4){ msg.textContent = t("pwMin"); return; }
+  if (p1 !== p2){ msg.textContent = t("noMatch"); return; }
   DB.userName = name;
   DB.pw = await sha256(p1);
   save();
   if (!DB.meters.length) seedDemo();
-  toast(`Account created. Welcome, ${name}!`);
+  toast(t("accountMade", {n:name}));
   enterApp();
 };
 
@@ -580,8 +780,7 @@ document.getElementById("liBtn").onclick = async () => {
   tries++;
   document.getElementById("liPw").value = "";
   msg.textContent = tries >= 3
-    ? "Still not matching. Use 'Forgot your password?' below."
-    : "That password does not match. Try again.";
+    ? t("wrongPw3") : t("wrongPw");
 };
 ["suName","suPw1","suPw2"].forEach(id =>
   document.getElementById(id).addEventListener("keydown",
@@ -634,10 +833,10 @@ function logout(){
   document.getElementById("app").classList.add("hide");
   document.getElementById("login").classList.remove("hide");
   paintLogin();
-  toast("Logged out");
+  toast(t("loggedOut"));
 }
 document.getElementById("logoutBtn").onclick = () => {
-  if (confirm("Log out of Bijli Meter Tracker?\n\nYour saved readings stay safely on this phone.")) logout();
+  if (confirm(t("logOutQ"))) logout();
 };
 
 /* One example meter so a new user sees how it works, not an empty screen. */
@@ -674,15 +873,15 @@ function render(){
    VIEW - TODAY
    ============================================================= */
 function vToday(v){
-  document.getElementById("scrTitle").textContent = "Today";
+  document.getElementById("scrTitle").textContent = t("tabToday");
   const active = DB.meters.filter(m => m.active);
   document.getElementById("scrSub").textContent =
-    active.length + (active.length === 1 ? " meter" : " meters");
+    active.length + " " + (active.length === 1 ? t("meter") : t("meters"));
 
   if (!active.length){
     v.innerHTML = `<div class="empty"><div class="e">▦</div>
-      <p>Add your first meter to start tracking daily units.</p>
-      <button class="btn" onclick="go('meters')">Go to Meters</button></div>`;
+      <p>${t("addFirstMeter")}</p>
+      <button class="btn" onclick="go('meters')">${t("goMeters")}</button></div>`;
     return;
   }
 
@@ -704,18 +903,18 @@ function vToday(v){
         </div>
         ${cur != null
           ? `<div class="register">${digits(cur, m.digits||6)}</div>
-             <div class="row"><span class="k">Units today</span>
+             <div class="row"><span class="k">${t("unitsToday")}</span>
                <span class="v" style="color:${u ? "var(--live)" : "var(--ink-faint)"}">${fmt(u)}</span></div>`
           : `<div class="register">${digits(null, m.digits||6)}</div>
-             <div class="row"><span class="k">Tap to enter reading</span>
+             <div class="row"><span class="k">${t("tapToEnter")}</span>
                <span class="v" style="color:var(--ink-faint)">—</span></div>`}
-        <div class="row"><span class="k">Previous</span>
+        <div class="row"><span class="k">${t("previous")}</span>
           <span class="v">${fmt(base.value,0)} <span style="color:var(--ink-faint)">· ${esc(base.date)}</span></span></div>
       </div>`;
   }
 
   const closedNote = isClosed(parse(entryDate).getFullYear(), parse(entryDate).getMonth())
-    ? `<div class="banner closed">This month is closed. Reopen it from the Report tab before editing.</div>` : "";
+    ? `<div class="banner closed">${t("monthClosedBanner")}</div>` : "";
 
   v.innerHTML = `
     <div class="date-bar">
@@ -724,12 +923,12 @@ function vToday(v){
       <button class="nudge" onclick="shiftDate(1)">›</button>
     </div>
     ${entryDate !== today()
-      ? `<div class="banner">Showing ${esc(entryDate)} · <a href="#" onclick="setDate('${today()}');return false" style="color:inherit">jump to today</a></div>`
+      ? `<div class="banner">${t("showing")} ${esc(entryDate)} · <a href="#" onclick="setDate('${today()}');return false" style="color:inherit">${t("jumpToday")}</a></div>`
       : ""}
     ${closedNote}
     <div class="card" style="text-align:center">
-      <h3>Total units on this day</h3>
-      <div class="big">${fmt(total)}<span class="unit">units</span></div>
+      <h3>${t("totalUnitsDay")}</h3>
+      <div class="big">${fmt(total)}<span class="unit">${t("units")}</span></div>
     </div>
     ${cards}`;
   document.getElementById("dInp").onchange = e => setDate(e.target.value || today());
@@ -750,17 +949,17 @@ function askReading(id){
     <h3>${esc(m.name)}</h3>
     <p class="sub">${esc(d.code)}${m.meterNo ? " · " + esc(m.meterNo) : ""} · ${esc(entryDate)}</p>
     <div class="card" style="background:var(--surface-2)">
-      <div class="row"><span class="k">Previous reading</span><span class="v">${fmt(base.value,0)}</span></div>
-      <div class="row"><span class="k">Recorded on</span><span class="v">${esc(base.date)}</span></div>
+      <div class="row"><span class="k">${t("prevReading")}</span><span class="v">${fmt(base.value,0)}</span></div>
+      <div class="row"><span class="k">${t("recordedOn")}</span><span class="v">${esc(base.date)}</span></div>
     </div>
     <div class="field">
-      <label for="rv">Reading now on the meter</label>
+      <label for="rv">${t("readingNow")}</label>
       <input type="number" id="rv" inputmode="decimal" step="any"
              value="${cur != null ? cur : ""}" placeholder="e.g. ${Math.floor(base.value)+5}">
     </div>
     <div id="calc" class="banner" style="display:none"></div>
-    <button class="btn" id="saveR">Save reading</button>
-    ${cur != null ? `<button class="btn ghost sm" style="margin-top:8px" id="delR">Delete this reading</button>` : ""}
+    <button class="btn" id="saveR">${t("saveReading")}</button>
+    ${cur != null ? `<button class="btn ghost sm" style="margin-top:8px" id="delR">${t("deleteReading")}</button>` : ""}
   `);
   const inp = document.getElementById("rv");
   const calc = document.getElementById("calc");
@@ -769,24 +968,23 @@ function askReading(id){
     if (isNaN(v)){ calc.style.display = "none"; return; }
     const u = unitsBetween(m, base.value, v);
     calc.style.display = "block";
-    calc.textContent = `That is ${fmt(u)} units since ${base.date}.`
-      + (u > 300 ? " That looks high — please check the digits." : "");
+    calc.textContent = t("sinceMsg", {u:fmt(u), d:base.date}) + (u > 300 ? t("highMsg") : "");
   };
   inp.oninput = preview; preview();
   setTimeout(() => inp.focus(), 250);
 
   document.getElementById("saveR").onclick = () => {
     const y = parse(entryDate).getFullYear(), mo = parse(entryDate).getMonth();
-    if (isClosed(y, mo)){ toast("That month is closed"); return; }
+    if (isClosed(y, mo)){ toast(t("monthClosedT")); return; }
     const v = parseFloat(inp.value);
-    if (isNaN(v)){ toast("Enter the reading first"); return; }
+    if (isNaN(v)){ toast(t("enterFirst")); return; }
     if (!DB.readings[m.id]) DB.readings[m.id] = {};
     DB.readings[m.id][entryDate] = v;
-    save(); closeSheet(); render(); toast("Reading saved");
+    save(); closeSheet(); render(); toast(t("readingSaved"));
   };
   if (cur != null) document.getElementById("delR").onclick = () => {
     delete DB.readings[m.id][entryDate];
-    save(); closeSheet(); render(); toast("Reading deleted");
+    save(); closeSheet(); render(); toast(t("readingDeleted"));
   };
 }
 
@@ -794,11 +992,11 @@ function askReading(id){
    VIEW - METERS
    ============================================================= */
 function vMeters(v){
-  document.getElementById("scrTitle").textContent = "Meters";
-  document.getElementById("scrSub").textContent = DB.meters.length + " connections";
-  let html = `<button class="btn" onclick="editMeter(null)">Add a meter</button><div style="height:12px"></div>`;
+  document.getElementById("scrTitle").textContent = t("tabMeters");
+  document.getElementById("scrSub").textContent = DB.meters.length + " " + t("connections");
+  let html = `<button class="btn" onclick="editMeter(null)">${t("addMeter")}</button><div style="height:12px"></div>`;
   if (!DB.meters.length){
-    html += `<div class="empty"><div class="e">▦</div><p>No meters yet.</p></div>`;
+    html += `<div class="empty"><div class="e">▦</div><p>${t("noMeters")}</p></div>`;
   }
   for (const m of DB.meters){
     const d = disco(m.disco);
@@ -806,15 +1004,15 @@ function vMeters(v){
       <div class="card meter-card" style="--disco:${d.color}" onclick="editMeter(${m.id})">
         <div class="mc-top">
           <div>
-            <div class="mc-name">${esc(m.name)}${m.active ? "" : ' <span style="color:var(--ink-faint);font-weight:400">· paused</span>'}</div>
+            <div class="mc-name">${esc(m.name)}${m.active ? "" : ' <span style="color:var(--ink-faint);font-weight:400">· ${t("paused")}</span>'}</div>
             <div class="mc-meta">${esc(d.name)}</div>
           </div>
           <span class="chip">${esc(d.code)}</span>
         </div>
-        ${m.meterNo ? `<div class="row"><span class="k">Meter no</span><span class="v">${esc(m.meterNo)}</span></div>` : ""}
-        ${m.consumerId ? `<div class="row"><span class="k">Consumer ID</span><span class="v">${esc(m.consumerId)}</span></div>` : ""}
-        ${m.refNo ? `<div class="row"><span class="k">Reference no</span><span class="v">${esc(m.refNo)}</span></div>` : ""}
-        <div class="row"><span class="k">Opening reading</span><span class="v">${fmt(m.opening,0)} · ${esc(m.openingDate||"")}</span></div>
+        ${m.meterNo ? `<div class="row"><span class="k">${t("meterNo")}</span><span class="v">${esc(m.meterNo)}</span></div>` : ""}
+        ${m.consumerId ? `<div class="row"><span class="k">${t("consumerId")}</span><span class="v">${esc(m.consumerId)}</span></div>` : ""}
+        ${m.refNo ? `<div class="row"><span class="k">${t("refNo")}</span><span class="v">${esc(m.refNo)}</span></div>` : ""}
+        <div class="row"><span class="k">${t("opening")}</span><span class="v">${fmt(m.opening,0)} · ${esc(m.openingDate||"")}</span></div>
       </div>`;
   }
   v.innerHTML = html;
@@ -825,39 +1023,39 @@ function editMeter(id){
                : {name:"", disco:"FESCO", meterNo:"", consumerId:"", refNo:"", address:"",
                   mf:1, digits:6, opening:0, openingDate:today(), active:true};
   sheet(`
-    <h3>${id ? "Edit meter" : "Add a meter"}</h3>
-    <p class="sub">${id ? "Changes apply to future calculations" : "Take these details from your latest bill"}</p>
-    <div class="field"><label for="f_name">Name this connection</label>
-      <input type="text" id="f_name" value="${esc(m.name)}" placeholder="Home, Shop, Tubewell"></div>
-    <div class="field"><label for="f_disco">Electricity supplier</label>
+    <h3>${id ? t("editMeter") : t("addMeter")}</h3>
+    <p class="sub">${id ? t("editApplies") : t("takeFromBill")}</p>
+    <div class="field"><label for="f_name">${t("connName")}</label>
+      <input type="text" id="f_name" value="${esc(m.name)}" placeholder="${t('connPh')}"></div>
+    <div class="field"><label for="f_disco">${t("supplier")}</label>
       <select id="f_disco">${DISCOS.map(d =>
         `<option value="${d.code}" ${d.code===m.disco?"selected":""}>${d.code} — ${d.name}</option>`).join("")}</select></div>
     <p class="sub" id="regionNote" style="margin:-10px 0 16px"></p>
-    <div class="field"><label for="f_meter">Meter number</label>
-      <input type="text" id="f_meter" value="${esc(m.meterNo)}" placeholder="as printed on the bill"></div>
+    <div class="field"><label for="f_meter">${t("meterNo")}</label>
+      <input type="text" id="f_meter" value="${esc(m.meterNo)}" placeholder="${t('meterNoPh')}"></div>
     <div class="grid2">
-      <div class="field"><label for="f_cid">Consumer ID</label>
+      <div class="field"><label for="f_cid">${t("consumerId")}</label>
         <input type="text" id="f_cid" inputmode="numeric" value="${esc(m.consumerId)}"></div>
-      <div class="field"><label for="f_ref">Reference no</label>
+      <div class="field"><label for="f_ref">${t("refNo")}</label>
         <input type="text" id="f_ref" inputmode="numeric" value="${esc(m.refNo)}"></div>
     </div>
     <div class="grid2">
-      <div class="field"><label for="f_open">Opening reading</label>
+      <div class="field"><label for="f_open">${t("opening")}</label>
         <input type="number" id="f_open" inputmode="decimal" step="any" value="${m.opening}"></div>
-      <div class="field"><label for="f_odate">Reading date</label>
+      <div class="field"><label for="f_odate">${t("readingDate")}</label>
         <input type="date" id="f_odate" value="${esc(m.openingDate||today())}"></div>
     </div>
     <div class="grid2">
-      <div class="field"><label for="f_mf">Multiplier (MF)</label>
+      <div class="field"><label for="f_mf">${t("mf")}</label>
         <input type="number" id="f_mf" inputmode="decimal" step="any" value="${m.mf}"></div>
-      <div class="field"><label for="f_dig">Dial digits</label>
+      <div class="field"><label for="f_dig">${t("digits")}</label>
         <input type="number" id="f_dig" inputmode="numeric" value="${m.digits}"></div>
     </div>
     <div class="field"><label style="display:flex;align-items:center;gap:9px;text-transform:none;letter-spacing:0;font-size:14px;color:var(--ink)">
       <input type="checkbox" id="f_act" ${m.active?"checked":""} style="width:19px;height:19px;accent-color:var(--live)">
-      Include this meter in daily tracking</label></div>
-    <button class="btn" id="saveM">${id ? "Save changes" : "Add meter"}</button>
-    ${id ? `<button class="btn danger sm" style="margin-top:10px" id="delM">Delete meter and its readings</button>` : ""}
+      ${t("includeMeter")}</label></div>
+    <button class="btn" id="saveM">${id ? t("saveChanges") : t("addMeter")}</button>
+    ${id ? `<button class="btn danger sm" style="margin-top:10px" id="delM">${t("deleteMeterBtn")}</button>` : ""}
   `);
   const sel = document.getElementById("f_disco");
   const note = document.getElementById("regionNote");
@@ -866,7 +1064,7 @@ function editMeter(id){
 
   document.getElementById("saveM").onclick = () => {
     const name = document.getElementById("f_name").value.trim();
-    if (!name){ toast("Give this connection a name"); return; }
+    if (!name){ toast(t("nameNeeded")); return; }
     const data = {
       name, disco: sel.value,
       meterNo: document.getElementById("f_meter").value.trim(),
@@ -880,13 +1078,13 @@ function editMeter(id){
     };
     if (id) Object.assign(DB.meters.find(x => x.id === id), data);
     else DB.meters.push(Object.assign({id: DB.seq++}, data));
-    save(); closeSheet(); render(); toast(id ? "Meter updated" : "Meter added");
+    save(); closeSheet(); render(); toast(id ? t("meterUpdated") : t("meterAdded"));
   };
   if (id) document.getElementById("delM").onclick = () => {
-    if (!confirm("Delete this meter and every reading recorded for it?")) return;
+    if (!confirm(t("delMeterQ"))) return;
     DB.meters = DB.meters.filter(x => x.id !== id);
     delete DB.readings[id];
-    save(); closeSheet(); render(); toast("Meter deleted");
+    save(); closeSheet(); render(); toast(t("meterDeleted"));
   };
 }
 
@@ -894,14 +1092,14 @@ function editMeter(id){
    VIEW - MONTHLY REPORT
    ============================================================= */
 function vReport(v){
-  document.getElementById("scrTitle").textContent = "Report";
+  document.getElementById("scrTitle").textContent = t("tabReport");
   const s = DB.settings;
   const {from, to} = periodFor(repY, repM, s.useCycle, s.cycleStart);
-  document.getElementById("scrSub").textContent = from + "  to  " + to;
+  document.getElementById("scrSub").textContent = from + "  ←  ".replace("←", lang==="ur" ? "تا" : "to") + "  " + to;
 
   const meters = DB.meters.filter(m => m.active);
   if (!meters.length){
-    v.innerHTML = `<div class="empty"><div class="e">▤</div><p>Add a meter to see monthly reports.</p></div>`;
+    v.innerHTML = `<div class="empty"><div class="e">▤</div><p>${t("addToSee")}</p></div>`;
     return;
   }
   const {rows, tot, grand} = matrix(from, to, meters);
@@ -914,47 +1112,47 @@ function vReport(v){
   v.innerHTML = `
     <div class="date-bar">
       <button class="nudge" onclick="shiftMonth(-1)">‹</button>
-      <input type="text" value="${MONTHS[repM]} ${repY}" readonly style="text-align:center;font-weight:700">
+      <input type="text" value="${monthName(repM)} ${repY}" readonly style="text-align:center;font-weight:700">
       <button class="nudge" onclick="shiftMonth(1)">›</button>
     </div>
     <div class="seg">
-      <button class="${s.useCycle?"on":""}" onclick="setCycle(true)">Bill cycle</button>
-      <button class="${!s.useCycle?"on":""}" onclick="setCycle(false)">Calendar month</button>
+      <button class="${s.useCycle?"on":""}" onclick="setCycle(true)">${t("billCycle")}</button>
+      <button class="${!s.useCycle?"on":""}" onclick="setCycle(false)">${t("calMonth")}</button>
     </div>
-    ${closed ? `<div class="banner closed">Closed on ${esc((DB.closings.find(c=>c.year===repY&&c.month===repM)||{}).closedOn||"")}. Readings are locked.</div>` : ""}
+    ${closed ? `<div class="banner closed">${t("closedOnBanner",{d:esc((DB.closings.find(c=>c.year===repY&&c.month===repM)||{}).closedOn||"")})}</div>` : ""}
 
     <div class="card" style="text-align:center">
-      <h3>Units this month</h3>
-      <div class="big">${fmt(grand)}<span class="unit">units</span></div>
+      <h3>${t("unitsMonth")}</h3>
+      <div class="big">${fmt(grand)}<span class="unit">${t("units")}</span></div>
       ${s.tariff > 0 ? `<div style="color:var(--ink-dim);font-size:13px;margin-top:6px">
-        Estimated ${esc(s.currency)} ${fmt(cost)} at ${fmt(s.tariff)} per unit</div>` : ""}
+        ${t("estimated",{c:esc(s.currency), v:fmt(cost), t:fmt(s.tariff)})}</div>` : ""}
       <div class="chart">${rows.map(r =>
         `<div class="bar${r===peak&&r.dayTotal>0?" hi":""}" style="height:${Math.max(2,(r.dayTotal/maxV)*100)}%"></div>`).join("")}</div>
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-faint);margin-top:5px">
-        <span>${esc(from.slice(8))} ${esc(MONTHS[parse(from).getMonth()].slice(0,3))}</span>
-        <span>${esc(to.slice(8))} ${esc(MONTHS[parse(to).getMonth()].slice(0,3))}</span></div>
+        <span>${esc(from.slice(8))} ${esc(monthName(parse(from).getMonth()).slice(0,3))}</span>
+        <span>${esc(to.slice(8))} ${esc(monthName(parse(to).getMonth()).slice(0,3))}</span></div>
     </div>
 
     <div class="card">
-      <h3>Day by day</h3>
+      <h3>${t("dayByDay")}</h3>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>Date</th>${meters.map(m => `<th>${esc(m.name)}</th>`).join("")}
-          <th>Day</th><th>Total so far</th></tr></thead>
+        <thead><tr><th>${t("date")}</th>${meters.map(m => `<th>${esc(m.name)}</th>`).join("")}
+          <th>${t("day")}</th><th>${t("totalSoFar")}</th></tr></thead>
         <tbody>${rows.map(r => `<tr>
           <td>${esc(r.date.slice(5))}</td>
           ${meters.map(m => `<td class="${r.per[m.id]?"":"zero"}">${r.per[m.id] ? fmt(r.per[m.id]) : "·"}</td>`).join("")}
           <td class="${r.dayTotal?"":"zero"}">${r.dayTotal ? fmt(r.dayTotal) : "·"}</td>
           <td class="cum">${fmt(r.cum)}</td></tr>`).join("")}
-          <tr class="tot"><td>Total</td>
+          <tr class="tot"><td>${t("total")}</td>
           ${meters.map(m => `<td>${fmt(tot[m.id])}</td>`).join("")}
           <td>${fmt(grand)}</td><td>${fmt(grand)}</td></tr>
         </tbody></table></div>
     </div>
 
     <div class="card">
-      <h3>Month closing</h3>
+      <h3>${t("monthClosing")}</h3>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>Meter</th><th>Opening</th><th>Closing</th><th>Units</th><th>Share</th></tr></thead>
+        <thead><tr><th>${t("meter")}</th><th>${t("openCol")}</th><th>${t("closeCol")}</th><th>${t("unitsCol")}</th><th>${t("share")}</th></tr></thead>
         <tbody>${meters.map(m => {
           const oc = openClose(m, from, to);
           const share = grand ? (tot[m.id]/grand*100) : 0;
@@ -962,18 +1160,18 @@ function vReport(v){
             <td>${oc.close!=null?fmt(oc.close,0):"·"}</td>
             <td>${fmt(tot[m.id])}</td><td>${share.toFixed(1)}%</td></tr>`;
         }).join("")}
-        <tr class="tot"><td>Total</td><td></td><td></td><td>${fmt(grand)}</td><td>100%</td></tr>
+        <tr class="tot"><td>${t("total")}</td><td></td><td></td><td>${fmt(grand)}</td><td>100%</td></tr>
         </tbody></table></div>
-      <div class="row"><span class="k">Days with a reading</span><span class="v">${withData} of ${rows.length}</span></div>
-      ${withData ? `<div class="row"><span class="k">Average per reading day</span><span class="v">${fmt(grand/withData)}</span></div>` : ""}
-      ${peak && peak.dayTotal ? `<div class="row"><span class="k">Highest day</span><span class="v">${esc(peak.date)} · ${fmt(peak.dayTotal)}</span></div>` : ""}
+      <div class="row"><span class="k">${t("daysWith")}</span><span class="v">${withData} ${t("of")} ${rows.length}</span></div>
+      ${withData ? `<div class="row"><span class="k">${t("avgDay")}</span><span class="v">${fmt(grand/withData)}</span></div>` : ""}
+      ${peak && peak.dayTotal ? `<div class="row"><span class="k">${t("highDay")}</span><span class="v">${esc(peak.date)} · ${fmt(peak.dayTotal)}</span></div>` : ""}
     </div>
 
-    <button class="btn ghost" onclick="exportCSV()">Export this report as CSV</button>
+    <button class="btn ghost" onclick="exportCSV()">${t("exportCsv")}</button>
     <div style="height:10px"></div>
     ${closed
-      ? `<button class="btn ghost" onclick="reopenMonth()">Reopen this month</button>`
-      : `<button class="btn" onclick="closeMonth()">Close this month</button>`}
+      ? `<button class="btn ghost" onclick="reopenMonth()">${t("reopenMonth")}</button>`
+      : `<button class="btn" onclick="closeMonth()">${t("closeMonth")}</button>`}
     <div style="height:20px"></div>`;
 }
 function shiftMonth(n){
@@ -989,7 +1187,7 @@ function closeMonth(){
   const {from, to} = periodFor(repY, repM, s.useCycle, s.cycleStart);
   const meters = DB.meters.filter(m => m.active);
   const {tot, grand} = matrix(from, to, meters);
-  if (!confirm(`Close ${MONTHS[repM]} ${repY}?\n\n${from} to ${to}\nTotal ${fmt(grand)} units\n\nReadings in this period will be locked.`)) return;
+  if (!confirm(t("closeQ", {m:monthName(repM), y:repY, f:from, t:to, u:fmt(grand)}))) return;
   DB.closings.push({
     year:repY, month:repM, from, to, closedOn:today(),
     total:grand, tariff:s.tariff, cost:grand*(s.tariff||0),
@@ -999,12 +1197,12 @@ function closeMonth(){
               open:oc.open, close:oc.close, units:tot[m.id]};
     })
   });
-  save(); render(); toast("Month closed");
+  save(); render(); toast(t("monthClosedOk"));
 }
 function reopenMonth(){
-  if (!confirm(`Reopen ${MONTHS[repM]} ${repY} for editing?`)) return;
+  if (!confirm(t("reopenQ", {m:monthName(repM), y:repY}))) return;
   DB.closings = DB.closings.filter(c => !(c.year===repY && c.month===repM));
-  save(); render(); toast("Month reopened");
+  save(); render(); toast(t("monthReopened"));
 }
 
 /* =============================================================
@@ -1047,71 +1245,76 @@ function exportCSV(){
   L.push([q(`Estimated cost (${s.currency})`), q((grand*(s.tariff||0)).toFixed(2))].join(","));
   download(`meter_report_${repY}_${String(repM+1).padStart(2,"0")}.csv`,
            "\ufeff" + L.join("\r\n"), "text/csv;charset=utf-8");
-  toast("CSV saved to your downloads");
+  toast(t("csvSaved"));
 }
 
 function vData(v){
-  document.getElementById("scrTitle").textContent = "Backup";
+  document.getElementById("scrTitle").textContent = t("tabBackup");
   const s = DB.settings;
   const nReadings = Object.values(DB.readings).reduce((a,o) => a + Object.keys(o).length, 0);
   v.innerHTML = `
     <div class="card">
-      <h3>Your data</h3>
-      <div class="row"><span class="k">Meters</span><span class="v">${DB.meters.length}</span></div>
-      <div class="row"><span class="k">Readings recorded</span><span class="v">${nReadings}</span></div>
-      <div class="row"><span class="k">Months closed</span><span class="v">${DB.closings.length}</span></div>
-      <div class="row"><span class="k">Stored</span><span class="v">On this phone only</span></div>
+      <h3>${t("yourData")}</h3>
+      <div class="row"><span class="k">${t("metersK")}</span><span class="v">${DB.meters.length}</span></div>
+      <div class="row"><span class="k">${t("readingsRec")}</span><span class="v">${nReadings}</span></div>
+      <div class="row"><span class="k">${t("monthsClosed")}</span><span class="v">${DB.closings.length}</span></div>
+      <div class="row"><span class="k">${t("stored")}</span><span class="v">${t("onPhone")}</span></div>
     </div>
 
     <div class="card">
-      <h3>Backup and restore</h3>
+      <h3>${t("bkTitle")}</h3>
       <p style="font-size:13px;color:var(--ink-dim);margin:0 0 12px">
-        Save a backup file, then keep it in Google Drive or WhatsApp yourself.
-        A backup that only exists on this phone will not help if the phone is lost.</p>
-      <button class="btn" onclick="backupNow()">Save a backup file</button>
+        ${t("bkTxt")}</p>
+      <button class="btn" onclick="backupNow()">${t("bkSave")}</button>
       <div style="height:9px"></div>
-      <button class="btn ghost" onclick="document.getElementById('impF').click()">Restore from a backup file</button>
+      <button class="btn ghost" onclick="document.getElementById('impF').click()">${t("bkRestore")}</button>
       <input type="file" id="impF" accept=".json,application/json" class="hide">
       <div style="height:9px"></div>
-      <button class="btn ghost" onclick="exportAllCSV()">Export every reading as CSV</button>
+      <button class="btn ghost" onclick="exportAllCSV()">${t("bkAll")}</button>
     </div>
 
     <div class="card">
-      <h3>Billing</h3>
-      <div class="field"><label for="s_tar">Tariff per unit</label>
+      <h3>${t("billing")}</h3>
+      <div class="field"><label for="s_tar">${t("tariff")}</label>
         <input type="number" id="s_tar" inputmode="decimal" step="any" value="${s.tariff}"></div>
       <div class="grid2">
-        <div class="field"><label for="s_cur">Currency</label>
+        <div class="field"><label for="s_cur">${t("currency")}</label>
           <input type="text" id="s_cur" value="${esc(s.currency)}"></div>
-        <div class="field"><label for="s_cyc">Bill cycle starts on</label>
+        <div class="field"><label for="s_cyc">${t("cycleStart")}</label>
           <input type="number" id="s_cyc" inputmode="numeric" min="1" max="28" value="${s.cycleStart}"></div>
       </div>
       <p style="font-size:12px;color:var(--ink-faint);margin:0 0 12px">
-        Set this to the reading date printed on your bill, so the report matches your billing period.
-        Suppliers charge in slabs, so the estimate is a guide, not the exact bill.</p>
-      <button class="btn ghost" onclick="saveSettings()">Save billing settings</button>
+        ${t("billingTxt")}</p>
+      <button class="btn ghost" onclick="saveSettings()">${t("saveBilling")}</button>
     </div>
 
     <div class="card">
-      <h3>Account</h3>
-      <div class="row"><span class="k">Signed in as</span><span class="v">${esc(DB.userName || "—")}</span></div>
+      <h3>${t("language")}</h3>
+      <div class="seg">
+        <button class="${lang!=='ur'?'on':''}" onclick="applyLang('en')">English</button>
+        <button class="${lang==='ur'?'on':''}" onclick="applyLang('ur')">اردو</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>${t("account")}</h3>
+      <div class="row"><span class="k">${t("signedIn")}</span><span class="v">${esc(DB.userName || "—")}</span></div>
       <div style="height:6px"></div>
-      <button class="btn ghost" onclick="changeName()">Change name</button>
+      <button class="btn ghost" onclick="changeName()">${t("changeName")}</button>
       <div style="height:9px"></div>
-      <button class="btn ghost" onclick="changePw()">Change password</button>
+      <button class="btn ghost" onclick="changePw()">${t("changePw")}</button>
       <div style="height:9px"></div>
-      <button class="btn" onclick="document.getElementById('logoutBtn').click()">Log out</button>
+      <button class="btn" onclick="document.getElementById('logoutBtn').click()">${t("logOut")}</button>
     </div>
 
     <div class="card">
-      <h3>Suppliers covered</h3>
+      <h3>${t("suppliersCovered")}</h3>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         ${DISCOS.filter(d => d.code !== "OTHER").map(d =>
           `<span class="chip" style="--disco:${d.color}">${d.code}</span>`).join("")}
       </div>
       <p style="font-size:12px;color:var(--ink-faint);margin:12px 0 0">
-        An independent tracking tool. Not affiliated with, endorsed by, or connected to
-        any distribution company, PEPCO or WAPDA. Readings are entered by you.</p>
+        ${t("disclaimer")}</p>
     </div>
     <div style="height:14px"></div>`;
 
@@ -1126,8 +1329,8 @@ function vData(v){
         const keepPw = DB.pw;
         memStore = Object.assign(blankDB(), d);
         if (!memStore.pw) memStore.pw = keepPw;
-        DB = memStore; save(); render(); toast("Backup restored");
-      }catch(err){ alert("That file could not be read as a backup."); }
+        DB = memStore; save(); render(); toast(t("bkRestored"));
+      }catch(err){ alert(t("badFile")); }
     };
     r.readAsText(f);
     e.target.value = "";
@@ -1136,7 +1339,7 @@ function vData(v){
 function backupNow(){
   const out = Object.assign({}, DB, {exportedOn: new Date().toISOString().slice(0,16).replace("T"," "), app:"Bijli Meter Tracker"});
   download(`bijli_backup_${today()}.json`, JSON.stringify(out, null, 1), "application/json");
-  toast("Backup file saved");
+  toast(t("bkSaved"));
 }
 function exportAllCSV(){
   const q = v => `"${String(v==null?"":v).replace(/"/g,'""')}"`;
@@ -1147,49 +1350,49 @@ function exportAllCSV(){
       L.push([d, m.name, disco(m.disco).code, m.meterNo, r[d], dayUnits(m, d).toFixed(2)].map(q).join(",")));
   }
   download(`all_readings_${today()}.csv`, "\ufeff" + L.join("\r\n"), "text/csv;charset=utf-8");
-  toast("CSV saved to your downloads");
+  toast(t("csvSaved"));
 }
 function saveSettings(){
   DB.settings.tariff = parseFloat(document.getElementById("s_tar").value) || 0;
   DB.settings.currency = document.getElementById("s_cur").value.trim() || "PKR";
   const c = parseInt(document.getElementById("s_cyc").value);
   DB.settings.cycleStart = (c >= 1 && c <= 28) ? c : 8;
-  save(); render(); toast("Billing settings saved");
+  save(); render(); toast(t("billingSaved"));
 }
 function changePw(){
   sheet(`
-    <h3>Change password</h3>
-    <p class="sub">You will use the new one next time you open the app</p>
-    <div class="field"><label for="c_old">Current password</label><input type="password" id="c_old"></div>
-    <div class="field"><label for="c_n1">New password</label><input type="password" id="c_n1"></div>
-    <div class="field"><label for="c_n2">Confirm new password</label><input type="password" id="c_n2"></div>
+    <h3>${t("changePw")}</h3>
+    <p class="sub">${t("cpSub")}</p>
+    <div class="field"><label for="c_old">${t("curPw")}</label><input type="password" id="c_old"></div>
+    <div class="field"><label for="c_n1">${t("newPw")}</label><input type="password" id="c_n1"></div>
+    <div class="field"><label for="c_n2">${t("confirmNew")}</label><input type="password" id="c_n2"></div>
     <div class="msg" id="c_msg"></div>
-    <button class="btn" id="c_go">Save new password</button>`);
+    <button class="btn" id="c_go">${t("savePw")}</button>`);
   document.getElementById("c_go").onclick = async () => {
     const msg = document.getElementById("c_msg");
     if (await sha256(document.getElementById("c_old").value) !== DB.pw){
-      msg.textContent = "The current password does not match."; return;
+      msg.textContent = t("wrongCur"); return;
     }
     const n1 = document.getElementById("c_n1").value;
-    if (n1.length < 4){ msg.textContent = "Use at least 4 characters."; return; }
+    if (n1.length < 4){ msg.textContent = t("tooShort"); return; }
     if (n1 !== document.getElementById("c_n2").value){
-      msg.textContent = "The two new passwords do not match."; return;
+      msg.textContent = t("noMatch"); return;
     }
-    DB.pw = await sha256(n1); save(); closeSheet(); toast("Password changed");
+    DB.pw = await sha256(n1); save(); closeSheet(); toast(t("pwChanged"));
   };
 }
 
 function changeName(){
   sheet(`
-    <h3>Change name</h3>
-    <p class="sub">Shown on the login screen</p>
-    <div class="field"><label for="n_new">Your name</label>
+    <h3>${t("cnTitle")}</h3>
+    <p class="sub">${t("cnSub")}</p>
+    <div class="field"><label for="n_new">${t("yourName")}</label>
       <input type="text" id="n_new" value="${esc(DB.userName||"")}"></div>
-    <button class="btn" id="n_go">Save</button>`);
+    <button class="btn" id="n_go">${t("save")}</button>`);
   document.getElementById("n_go").onclick = () => {
     const n = document.getElementById("n_new").value.trim();
-    if (!n){ toast("Enter a name"); return; }
-    DB.userName = n; save(); closeSheet(); render(); toast("Name updated");
+    if (!n){ toast(t("enterName")); return; }
+    DB.userName = n; save(); closeSheet(); render(); toast(t("nameUpdated"));
   };
 }
 
@@ -1212,6 +1415,7 @@ function closeSheet(){
 /* =============================================================
    START
    ============================================================= */
+applyLang((DB.settings && DB.settings.lang) || "en", false);
 paintLogin();
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")){
   navigator.serviceWorker.register("service-worker.js").catch(() => {});
