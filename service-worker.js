@@ -1,7 +1,7 @@
 /* Bijli Meter Tracker - offline service worker
    Caches the whole app so it opens with no signal at all. */
 
-const CACHE = "bijli-v1";
+const CACHE = "bijli-v2";
 const FILES = [
   "./",
   "./index.html",

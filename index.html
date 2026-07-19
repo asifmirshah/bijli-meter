@@ -323,7 +323,12 @@ let DB = load();
 /* =============================================================
    HELPERS
    ============================================================= */
-const iso = d => d.toISOString().slice(0,10);
+/* Dates are handled as plain local calendar days.
+   toISOString() converts to UTC, which in Pakistan (UTC+5) shifts the
+   date back one day and made addDays() return the same day forever. */
+const iso = d => d.getFullYear() + "-"
+               + String(d.getMonth()+1).padStart(2,"0") + "-"
+               + String(d.getDate()).padStart(2,"0");
 const today = () => iso(new Date());
 const parse = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
 const addDays = (s,n) => { const d = parse(s); d.setDate(d.getDate()+n); return iso(d); };
@@ -404,8 +409,9 @@ function periodFor(y, m, useCycle, startDay){
 function matrix(from, to, meters){
   const rows = [], tot = {};
   meters.forEach(m => tot[m.id] = 0);
-  let cum = 0, d = from;
+  let cum = 0, d = from, guard = 0;
   while (d <= to){
+    if (++guard > 400) break;          // never spin forever, whatever the input
     const per = {}; let dayTotal = 0;
     for (const m of meters){
       const u = dayUnits(m, d);
@@ -415,7 +421,9 @@ function matrix(from, to, meters){
     rows.push({date:d, day:parse(d).getDate(), per,
                dayTotal:Math.round(dayTotal*100)/100,
                cum:Math.round(cum*100)/100});
-    d = addDays(d, 1);
+    const next = addDays(d, 1);
+    if (next <= d) break;              // date failed to advance - stop cleanly
+    d = next;
   }
   for (const k in tot) tot[k] = Math.round(tot[k]*100)/100;
   return {rows, tot, grand:Math.round(cum*100)/100};
