@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#12161c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bijli Meter">
+<meta name="description" content="Track daily electricity meter readings for any Pakistani distribution company. Works offline.">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Bijli Meter Tracker</title>
+<style>
+/* ============================================================
+   Design tokens
+   Palette taken from the meter itself: graphite housing, the
+   amber of a live terminal, a cool cyan for measured data.
+   ============================================================ */
+:root{
+  --bg:#0d1117;
+  --surface:#161b22;
+  --surface-2:#1c232d;
+  --line:#28313d;
+  --ink:#e8edf3;
+  --ink-dim:#8b98a8;
+  --ink-faint:#5a6674;
+  --live:#ffb43a;        /* energised amber - the signature accent */
+  --meas:#3fd0c9;        /* measured data */
+  --danger:#ff6b6b;
+  --ok:#4ade80;
+  --r:14px;
+  --mono:ui-monospace,"SF Mono","Roboto Mono","DejaVu Sans Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --safe-t:env(safe-area-inset-top,0px);
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--sans);
+  font-size:15px;line-height:1.45;overscroll-behavior-y:none;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font-family:inherit;font-size:16px}
+button{cursor:pointer;border:none;background:none;color:inherit}
+.hide{display:none!important}
+
+/* ---------- numeric register: the signature element ----------
+   Readings are shown as separate digit cells, the way the dial
+   register on a real meter is physically divided.              */
+.register{display:flex;gap:3px;justify-content:center}
+.register .d{
+  width:26px;height:38px;display:grid;place-items:center;
+  background:#05080c;border:1px solid var(--line);border-radius:4px;
+  font-family:var(--mono);font-size:20px;font-weight:600;color:var(--live);
+  text-shadow:0 0 10px rgba(255,180,58,.45);
+}
+.register .d.dim{color:var(--ink-faint);text-shadow:none}
+
+/* ---------- login ---------- */
+#login{
+  position:fixed;inset:0;z-index:100;background:var(--bg);
+  display:flex;flex-direction:column;justify-content:center;
+  padding:28px 24px calc(28px + var(--safe-b));
+}
+.brand{text-align:center;margin-bottom:30px}
+.bolt{
+  width:64px;height:64px;margin:0 auto 14px;border-radius:18px;
+  background:linear-gradient(160deg,#2a323d,#12171e);
+  border:1px solid var(--line);display:grid;place-items:center;font-size:30px;
+  box-shadow:0 0 34px rgba(255,180,58,.18);
+}
+.brand h1{
+  margin:0;font-size:23px;font-weight:700;letter-spacing:-.4px;
+}
+.brand p{margin:5px 0 0;color:var(--ink-dim);font-size:13px}
+.field{margin-bottom:14px}
+.field label{
+  display:block;font-size:11px;letter-spacing:.10em;text-transform:uppercase;
+  color:var(--ink-dim);margin-bottom:6px;font-weight:600;
+}
+input[type=text],input[type=password],input[type=number],input[type=date],select,textarea{
+  width:100%;padding:13px 14px;background:var(--surface);color:var(--ink);
+  border:1px solid var(--line);border-radius:11px;outline:none;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--live)}
+.btn{
+  display:block;width:100%;padding:14px;border-radius:11px;
+  background:var(--live);color:#12161c;font-weight:700;font-size:16px;
+  text-align:center;
+}
+.btn:active{transform:scale(.985)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.danger{background:transparent;border:1px solid var(--danger);color:var(--danger)}
+.btn.sm{padding:10px;font-size:14px}
+.msg{min-height:18px;font-size:13px;color:var(--danger);text-align:center;margin:8px 0}
+.hint{font-size:12px;color:var(--ink-faint);text-align:center;margin-top:16px;line-height:1.5}
+
+/* ---------- app shell ---------- */
+#app{display:flex;flex-direction:column;height:100%}
+header{
+  padding:calc(12px + var(--safe-t)) 16px 12px;background:var(--surface);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:20;
+}
+header .t{flex:1;min-width:0}
+header h2{margin:0;font-size:17px;font-weight:700;letter-spacing:-.2px}
+header .sub{font-size:11.5px;color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{
+  width:38px;height:38px;border-radius:10px;background:var(--surface-2);
+  display:grid;place-items:center;font-size:17px;flex:none;border:1px solid var(--line);
+}
+main{flex:1;overflow-y:auto;padding:14px 14px 22px;-webkit-overflow-scrolling:touch}
+nav{
+  display:flex;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:var(--safe-b);position:sticky;bottom:0;z-index:20;
+}
+nav button{
+  flex:1;padding:9px 2px 8px;display:flex;flex-direction:column;align-items:center;
+  gap:3px;font-size:10px;color:var(--ink-faint);font-weight:600;
+}
+nav button .i{font-size:19px;line-height:1}
+nav button.on{color:var(--live)}
+
+/* ---------- cards ---------- */
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px;margin-bottom:12px;
+}
+.card h3{
+  margin:0 0 12px;font-size:11px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-dim);font-weight:700;
+}
+.meter-card{border-left:3px solid var(--disco,var(--live))}
+.mc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.mc-name{font-weight:700;font-size:15.5px;letter-spacing:-.2px}
+.mc-meta{font-size:11.5px;color:var(--ink-dim);font-family:var(--mono);margin-top:2px}
+.chip{
+  font-size:10px;font-weight:800;letter-spacing:.06em;padding:4px 8px;border-radius:6px;
+  background:var(--disco,var(--live));color:#0d1117;flex:none;
+}
+.row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13.5px}
+.row+.row{border-top:1px solid var(--line)}
+.row .k{color:var(--ink-dim)}
+.row .v{font-family:var(--mono);font-weight:600}
+.big{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--live);letter-spacing:-1px}
+.big.meas{color:var(--meas)}
+.unit{font-size:12px;color:var(--ink-dim);font-family:var(--sans);font-weight:600;margin-left:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ---------- table ---------- */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px}
+table{border-collapse:collapse;width:100%;font-size:12.5px;font-family:var(--mono)}
+th,td{padding:7px 8px;text-align:right;white-space:nowrap}
+th{
+  color:var(--ink-dim);font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+  border-bottom:1px solid var(--line);font-family:var(--sans);font-weight:700;
+}
+td:first-child,th:first-child{text-align:left;position:sticky;left:0;background:var(--surface)}
+tr.tot td{
+  border-top:2px solid var(--line);font-weight:800;color:var(--live);
+  background:var(--surface);
+}
+tr.tot td:first-child{background:var(--surface)}
+tbody tr:nth-child(even) td{background:rgba(255,255,255,.018)}
+tbody tr:nth-child(even) td:first-child{background:#181e26}
+td.zero{color:var(--ink-faint)}
+td.cum{color:var(--meas)}
+
+/* ---------- chart ---------- */
+.chart{display:flex;align-items:flex-end;gap:2px;height:86px;margin-top:6px}
+.chart .bar{flex:1;background:var(--live);border-radius:2px 2px 0 0;min-height:2px;opacity:.85}
+.chart .bar.hi{background:var(--meas)}
+
+/* ---------- misc ---------- */
+.empty{text-align:center;padding:40px 20px;color:var(--ink-faint)}
+.empty .e{font-size:38px;margin-bottom:10px;opacity:.5}
+.empty p{margin:0 0 16px;font-size:14px}
+.seg{display:flex;background:var(--surface-2);border-radius:10px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;padding:8px;border-radius:8px;font-size:12.5px;font-weight:700;color:var(--ink-dim)}
+.seg button.on{background:var(--live);color:#0d1117}
+.date-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.date-bar input{flex:1;text-align:center;font-family:var(--mono)}
+.nudge{
+  width:42px;height:46px;border-radius:11px;background:var(--surface-2);
+  border:1px solid var(--line);display:grid;place-items:center;font-size:17px;flex:none;
+}
+.banner{
+  background:rgba(255,180,58,.09);border:1px solid rgba(255,180,58,.3);
+  border-radius:11px;padding:11px 13px;font-size:12.5px;color:var(--live);margin-bottom:12px;
+}
+.banner.closed{background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.3);color:var(--ok)}
+
+/* ---------- modal ---------- */
+.modal{
+  position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.72);
+  display:flex;align-items:flex-end;
+}
+.sheet{
+  background:var(--surface);width:100%;max-height:92vh;overflow-y:auto;
+  border-radius:20px 20px 0 0;padding:8px 18px calc(22px + var(--safe-b));
+  border-top:1px solid var(--line);animation:up .22s ease;
+}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.grab{width:36px;height:4px;background:var(--line);border-radius:2px;margin:6px auto 14px}
+.sheet h3{margin:0 0 4px;font-size:18px;font-weight:700;letter-spacing:-.3px;text-transform:none;color:var(--ink)}
+.sheet .sub{color:var(--ink-dim);font-size:13px;margin:0 0 18px;font-family:var(--mono)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- toast ---------- */
+#toast{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + var(--safe-b));
+  background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:11px;
+  font-size:13.5px;font-weight:700;z-index:200;opacity:0;pointer-events:none;
+  transition:opacity .22s;max-width:90vw;text-align:center;
+}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- ============================ LOGIN ============================ -->
+<div id="login">
+  <div class="brand">
+    <div class="bolt">⚡</div>
+    <h1>Bijli Meter Tracker</h1>
+    <p id="loginSub">Daily readings for every Pakistani electricity supplier</p>
+  </div>
+  <div class="field">
+    <label for="pw1">Password</label>
+    <input type="password" id="pw1" autocomplete="current-password" inputmode="text">
+  </div>
+  <div class="field hide" id="pw2Wrap">
+    <label for="pw2">Confirm password</label>
+    <input type="password" id="pw2" autocomplete="new-password">
+  </div>
+  <div class="msg" id="loginMsg"></div>
+  <button class="btn" id="loginBtn">Unlock</button>
+  <p class="hint" id="loginHint">Your readings stay on this phone. Nothing is uploaded.</p>
+</div>
+
+<!-- ============================ APP ============================ -->
+<div id="app" class="hide">
+  <header>
+    <div class="t">
+      <h2 id="scrTitle">Today</h2>
+      <div class="sub" id="scrSub"></div>
+    </div>
+    <button class="icon-btn" id="logoutBtn" title="Log out" aria-label="Log out">⏻</button>
+  </header>
+
+  <main id="view"></main>
+
+  <nav>
+    <button data-tab="today" class="on"><span class="i">⚡</span>Today</button>
+    <button data-tab="meters"><span class="i">▦</span>Meters</button>
+    <button data-tab="report"><span class="i">▤</span>Report</button>
+    <button data-tab="data"><span class="i">⛁</span>Backup</button>
+  </nav>
+</div>
+
+<div id="modal"></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* =============================================================
+   DISTRIBUTION COMPANIES
+   All WAPDA / PEPCO distribution companies, plus K-Electric
+   (private) and the AJ&K department, so every consumer in the
+   country can use this app.
+   ============================================================= */
+const DISCOS = [
+  {code:"LESCO",  name:"Lahore Electric Supply Company",        region:"Lahore, Kasur, Okara, Sheikhupura, Nankana Sahib",            color:"#e11d48"},
+  {code:"GEPCO",  name:"Gujranwala Electric Power Company",     region:"Gujranwala, Sialkot, Gujrat, Narowal, Hafizabad, M.B.Din",   color:"#f59e0b"},
+  {code:"FESCO",  name:"Faisalabad Electric Supply Company",    region:"Faisalabad, Jhang, Chiniot, Sargodha, T.T.Singh, Mianwali",  color:"#10b981"},
+  {code:"IESCO",  name:"Islamabad Electric Supply Company",     region:"Islamabad, Rawalpindi, Attock, Jhelum, Chakwal",             color:"#3b82f6"},
+  {code:"MEPCO",  name:"Multan Electric Power Company",         region:"Multan, Bahawalpur, D.G. Khan, Sahiwal, Khanewal, Vehari",   color:"#8b5cf6"},
+  {code:"PESCO",  name:"Peshawar Electric Supply Company",      region:"Peshawar, Mardan, Swat, Kohat and KP districts",             color:"#14b8a6"},
+  {code:"HESCO",  name:"Hyderabad Electric Supply Company",     region:"Hyderabad, Mirpurkhas, Nawabshah, Badin, Thatta",            color:"#ec4899"},
+  {code:"SEPCO",  name:"Sukkur Electric Power Company",         region:"Sukkur, Larkana, Shikarpur, Jacobabad, Ghotki",              color:"#f97316"},
+  {code:"QESCO",  name:"Quetta Electric Supply Company",        region:"Quetta, Zhob, Sibi, Khuzdar, Turbat and Balochistan",        color:"#84cc16"},
+  {code:"TESCO",  name:"Tribal Areas Electric Supply Company",  region:"Khyber, Orakzai, Kurram, North & South Waziristan",          color:"#06b6d4"},
+  {code:"HAZECO", name:"Hazara Electric Supply Company",        region:"Abbottabad, Mansehra, Haripur, Battagram",                   color:"#a78bfa"},
+  {code:"KE",     name:"K-Electric",                            region:"Karachi and adjoining areas (private supplier)",             color:"#eab308"},
+  {code:"AJKEDD", name:"AJ&K Electricity Department",           region:"Azad Jammu & Kashmir",                                       color:"#94a3b8"},
+  {code:"OTHER",  name:"Other supplier",                        region:"Any supplier not listed above",                              color:"#64748b"}
+];
+const disco = c => DISCOS.find(d => d.code === c) || DISCOS[DISCOS.length-1];
+
+/* =============================================================
+   STORAGE
+   localStorage when available; falls back to memory so the app
+   still runs in restricted webviews instead of crashing.
+   ============================================================= */
+const KEY = "bijli.v1";
+let memStore = null;
+
+function blankDB(){
+  return {pw:"", meters:[], readings:{}, closings:[],
+          settings:{tariff:0, currency:"PKR", cycleStart:8, useCycle:true}, seq:1};
+}
+function load(){
+  if (memStore) return memStore;
+  try{
+    const raw = localStorage.getItem(KEY);
+    memStore = raw ? JSON.parse(raw) : blankDB();
+  }catch(e){ memStore = blankDB(); }
+  // forward-compatible defaults
+  const b = blankDB();
+  for (const k in b) if (memStore[k] === undefined) memStore[k] = b[k];
+  for (const k in b.settings) if (memStore.settings[k] === undefined) memStore.settings[k] = b.settings[k];
+  return memStore;
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(memStore)); }
+  catch(e){ /* private mode - stays in memory for this session */ }
+}
+let DB = load();
+
+/* =============================================================
+   HELPERS
+   ============================================================= */
+const iso = d => d.toISOString().slice(0,10);
+const today = () => iso(new Date());
+const parse = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const addDays = (s,n) => { const d = parse(s); d.setDate(d.getDate()+n); return iso(d); };
+const MONTHS = ["January","February","March","April","May","June","July",
+                "August","September","October","November","December"];
+const daysIn = (y,m) => new Date(y, m+1, 0).getDate();
+const fmt = (n,dec=2) => (Number(n)||0).toLocaleString("en-US",
+                          {minimumFractionDigits:dec, maximumFractionDigits:dec});
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,
+              c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+async function sha256(txt){
+  if (window.crypto && crypto.subtle && location.protocol !== "file:"){
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt));
+    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,"0")).join("");
+  }
+  // Fallback for file:// where SubtleCrypto is unavailable.
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i=0;i<txt.length;i++){
+    const c = txt.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 2654435761);
+    h2 = Math.imul(h2 ^ c, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+  return "fb" + (4294967296*(2097151&h2)+(h1>>>0)).toString(16);
+}
+
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("on");
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), 2200);
+}
+
+/* =============================================================
+   CONSUMPTION MATHS
+   Units = (reading - previous reading) x MF, with dial rollover.
+   ============================================================= */
+function unitsBetween(meter, prev, cur){
+  if (prev == null || cur == null) return 0;
+  let diff = cur - prev;
+  if (diff < 0) diff += Math.pow(10, meter.digits || 6);   // dial rolled over
+  return Math.round(diff * (meter.mf || 1) * 100) / 100;
+}
+function readingOn(mid, date){
+  const r = DB.readings[mid];
+  return r && r[date] != null ? r[date] : null;
+}
+function prevReading(mid, date){
+  const r = DB.readings[mid] || {};
+  const before = Object.keys(r).filter(d => d < date).sort();
+  if (!before.length) return null;
+  const d = before[before.length-1];
+  return {date:d, value:r[d]};
+}
+function dayUnits(meter, date){
+  const cur = readingOn(meter.id, date);
+  if (cur == null) return 0;
+  const p = prevReading(meter.id, date);
+  const base = p ? p.value : meter.opening;
+  return unitsBetween(meter, base, cur);
+}
+function baselineFor(meter, date){
+  const p = prevReading(meter.id, date);
+  return p ? {value:p.value, date:p.date}
+           : {value:meter.opening, date:meter.openingDate || "opening"};
+}
+/** Billing cycle (e.g. 8th -> 7th of next month) or plain calendar month. */
+function periodFor(y, m, useCycle, startDay){
+  if (!useCycle) return {from: iso(new Date(y,m,1)), to: iso(new Date(y,m,daysIn(y,m)))};
+  const sd = Math.min(startDay, daysIn(y,m));
+  const from = iso(new Date(y, m, sd));
+  const ny = m === 11 ? y+1 : y, nm = m === 11 ? 0 : m+1;
+  const to = addDays(iso(new Date(ny, nm, Math.min(startDay, daysIn(ny,nm)))), -1);
+  return {from, to};
+}
+/** Day-by-day grid with per-meter units, day total and accumulated total. */
+function matrix(from, to, meters){
+  const rows = [], tot = {};
+  meters.forEach(m => tot[m.id] = 0);
+  let cum = 0, d = from;
+  while (d <= to){
+    const per = {}; let dayTotal = 0;
+    for (const m of meters){
+      const u = dayUnits(m, d);
+      per[m.id] = u; tot[m.id] += u; dayTotal += u;
+    }
+    cum += dayTotal;
+    rows.push({date:d, day:parse(d).getDate(), per,
+               dayTotal:Math.round(dayTotal*100)/100,
+               cum:Math.round(cum*100)/100});
+    d = addDays(d, 1);
+  }
+  for (const k in tot) tot[k] = Math.round(tot[k]*100)/100;
+  return {rows, tot, grand:Math.round(cum*100)/100};
+}
+function openClose(meter, from, to){
+  const r = DB.readings[meter.id] || {};
+  const inRange = Object.keys(r).filter(d => d >= from && d <= to).sort();
+  const p = prevReading(meter.id, from);
+  return {open: p ? p.value : meter.opening,
+          close: inRange.length ? r[inRange[inRange.length-1]] : null};
+}
+const isClosed = (y,m) => DB.closings.some(c => c.year===y && c.month===m);
+
+/* =============================================================
+   LOGIN  /  LOGOUT
+   ============================================================= */
+let firstRun = !DB.pw;
+
+function paintLogin(){
+  firstRun = !DB.pw;
+  document.getElementById("pw2Wrap").classList.toggle("hide", !firstRun);
+  document.getElementById("loginBtn").textContent = firstRun ? "Create password" : "Unlock";
+  document.getElementById("loginSub").textContent = firstRun
+    ? "Set a password to protect your readings"
+    : "Daily readings for every Pakistani electricity supplier";
+  document.getElementById("loginHint").textContent = firstRun
+    ? "Choose at least 4 characters. There is no way to recover it, so keep it somewhere safe."
+    : "Your readings stay on this phone. Nothing is uploaded.";
+  document.getElementById("loginMsg").textContent = "";
+  document.getElementById("pw1").value = "";
+  document.getElementById("pw2").value = "";
+}
+let tries = 0;
+async function doLogin(){
+  const msg = document.getElementById("loginMsg");
+  const p1 = document.getElementById("pw1").value;
+  if (firstRun){
+    if (p1.length < 4){ msg.textContent = "Use at least 4 characters."; return; }
+    if (p1 !== document.getElementById("pw2").value){
+      msg.textContent = "The two passwords do not match."; return;
+    }
+    DB.pw = await sha256(p1); save();
+    if (!DB.meters.length) seedDemo();
+    enterApp(); return;
+  }
+  if (await sha256(p1) === DB.pw){ tries = 0; enterApp(); return; }
+  tries++;
+  document.getElementById("pw1").value = "";
+  msg.textContent = tries >= 3
+    ? "Still not matching. If you have forgotten it, reinstall the app — your backup file can be imported afterwards."
+    : "That password does not match. Try again.";
+}
+function enterApp(){
+  document.getElementById("login").classList.add("hide");
+  document.getElementById("app").classList.remove("hide");
+  go("today");
+}
+function logout(){
+  document.getElementById("app").classList.add("hide");
+  document.getElementById("login").classList.remove("hide");
+  paintLogin();
+  setTimeout(() => document.getElementById("pw1").focus(), 100);
+  toast("Logged out");
+}
+document.getElementById("loginBtn").onclick = doLogin;
+document.getElementById("logoutBtn").onclick = () => {
+  if (confirm("Log out of Bijli Meter Tracker?\n\nYour saved readings stay on this phone.")) logout();
+};
+["pw1","pw2"].forEach(id => document.getElementById(id).addEventListener("keydown",
+  e => { if (e.key === "Enter") doLogin(); }));
+
+/* One example meter so a new user sees how it works, not an empty screen. */
+function seedDemo(){
+  DB.meters = [{
+    id: DB.seq++, name:"Home", disco:"FESCO", meterNo:"", consumerId:"", refNo:"",
+    address:"", mf:1, digits:6, opening:0, openingDate:today(), active:true
+  }];
+  save();
+}
+
+/* =============================================================
+   NAVIGATION
+   ============================================================= */
+let tab = "today";
+let repY = new Date().getFullYear(), repM = new Date().getMonth();
+let entryDate = today();
+
+function go(t){
+  tab = t;
+  document.querySelectorAll("nav button").forEach(b =>
+    b.classList.toggle("on", b.dataset.tab === t));
+  render();
+}
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => go(b.dataset.tab));
+
+function render(){
+  const v = document.getElementById("view");
+  v.scrollTop = 0;
+  ({today:vToday, meters:vMeters, report:vReport, data:vData})[tab](v);
+}
+
+/* =============================================================
+   VIEW - TODAY
+   ============================================================= */
+function vToday(v){
+  document.getElementById("scrTitle").textContent = "Today";
+  const active = DB.meters.filter(m => m.active);
+  document.getElementById("scrSub").textContent =
+    active.length + (active.length === 1 ? " meter" : " meters");
+
+  if (!active.length){
+    v.innerHTML = `<div class="empty"><div class="e">▦</div>
+      <p>Add your first meter to start tracking daily units.</p>
+      <button class="btn" onclick="go('meters')">Go to Meters</button></div>`;
+    return;
+  }
+
+  let total = 0, cards = "";
+  for (const m of active){
+    const d = disco(m.disco);
+    const cur = readingOn(m.id, entryDate);
+    const base = baselineFor(m, entryDate);
+    const u = cur != null ? unitsBetween(m, base.value, cur) : null;
+    if (u) total += u;
+    cards += `
+      <div class="card meter-card" style="--disco:${d.color}" onclick="askReading(${m.id})">
+        <div class="mc-top">
+          <div>
+            <div class="mc-name">${esc(m.name)}</div>
+            <div class="mc-meta">${esc(m.meterNo || d.region.split(",")[0])}</div>
+          </div>
+          <span class="chip">${esc(d.code)}</span>
+        </div>
+        ${cur != null
+          ? `<div class="register">${digits(cur, m.digits||6)}</div>
+             <div class="row"><span class="k">Units today</span>
+               <span class="v" style="color:${u ? "var(--live)" : "var(--ink-faint)"}">${fmt(u)}</span></div>`
+          : `<div class="register">${digits(null, m.digits||6)}</div>
+             <div class="row"><span class="k">Tap to enter reading</span>
+               <span class="v" style="color:var(--ink-faint)">—</span></div>`}
+        <div class="row"><span class="k">Previous</span>
+          <span class="v">${fmt(base.value,0)} <span style="color:var(--ink-faint)">· ${esc(base.date)}</span></span></div>
+      </div>`;
+  }
+
+  const closedNote = isClosed(parse(entryDate).getFullYear(), parse(entryDate).getMonth())
+    ? `<div class="banner closed">This month is closed. Reopen it from the Report tab before editing.</div>` : "";
+
+  v.innerHTML = `
+    <div class="date-bar">
+      <button class="nudge" onclick="shiftDate(-1)">‹</button>
+      <input type="date" id="dInp" value="${entryDate}" max="${today()}">
+      <button class="nudge" onclick="shiftDate(1)">›</button>
+    </div>
+    ${entryDate !== today()
+      ? `<div class="banner">Showing ${esc(entryDate)} · <a href="#" onclick="setDate('${today()}');return false" style="color:inherit">jump to today</a></div>`
+      : ""}
+    ${closedNote}
+    <div class="card" style="text-align:center">
+      <h3>Total units on this day</h3>
+      <div class="big">${fmt(total)}<span class="unit">units</span></div>
+    </div>
+    ${cards}`;
+  document.getElementById("dInp").onchange = e => setDate(e.target.value || today());
+}
+function digits(val, n){
+  const s = val == null ? "".padStart(n,"–") : String(Math.floor(val)).padStart(n,"0").slice(-n);
+  return [...s].map(c => `<span class="d${val==null?" dim":""}">${c}</span>`).join("");
+}
+function shiftDate(n){ setDate(addDays(entryDate, n)); }
+function setDate(d){ entryDate = d; render(); }
+
+function askReading(id){
+  const m = DB.meters.find(x => x.id === id);
+  const d = disco(m.disco);
+  const base = baselineFor(m, entryDate);
+  const cur = readingOn(m.id, entryDate);
+  sheet(`
+    <h3>${esc(m.name)}</h3>
+    <p class="sub">${esc(d.code)}${m.meterNo ? " · " + esc(m.meterNo) : ""} · ${esc(entryDate)}</p>
+    <div class="card" style="background:var(--surface-2)">
+      <div class="row"><span class="k">Previous reading</span><span class="v">${fmt(base.value,0)}</span></div>
+      <div class="row"><span class="k">Recorded on</span><span class="v">${esc(base.date)}</span></div>
+    </div>
+    <div class="field">
+      <label for="rv">Reading now on the meter</label>
+      <input type="number" id="rv" inputmode="decimal" step="any"
+             value="${cur != null ? cur : ""}" placeholder="e.g. ${Math.floor(base.value)+5}">
+    </div>
+    <div id="calc" class="banner" style="display:none"></div>
+    <button class="btn" id="saveR">Save reading</button>
+    ${cur != null ? `<button class="btn ghost sm" style="margin-top:8px" id="delR">Delete this reading</button>` : ""}
+  `);
+  const inp = document.getElementById("rv");
+  const calc = document.getElementById("calc");
+  const preview = () => {
+    const v = parseFloat(inp.value);
+    if (isNaN(v)){ calc.style.display = "none"; return; }
+    const u = unitsBetween(m, base.value, v);
+    calc.style.display = "block";
+    calc.textContent = `That is ${fmt(u)} units since ${base.date}.`
+      + (u > 300 ? " That looks high — please check the digits." : "");
+  };
+  inp.oninput = preview; preview();
+  setTimeout(() => inp.focus(), 250);
+
+  document.getElementById("saveR").onclick = () => {
+    const y = parse(entryDate).getFullYear(), mo = parse(entryDate).getMonth();
+    if (isClosed(y, mo)){ toast("That month is closed"); return; }
+    const v = parseFloat(inp.value);
+    if (isNaN(v)){ toast("Enter the reading first"); return; }
+    if (!DB.readings[m.id]) DB.readings[m.id] = {};
+    DB.readings[m.id][entryDate] = v;
+    save(); closeSheet(); render(); toast("Reading saved");
+  };
+  if (cur != null) document.getElementById("delR").onclick = () => {
+    delete DB.readings[m.id][entryDate];
+    save(); closeSheet(); render(); toast("Reading deleted");
+  };
+}
+
+/* =============================================================
+   VIEW - METERS
+   ============================================================= */
+function vMeters(v){
+  document.getElementById("scrTitle").textContent = "Meters";
+  document.getElementById("scrSub").textContent = DB.meters.length + " connections";
+  let html = `<button class="btn" onclick="editMeter(null)">Add a meter</button><div style="height:12px"></div>`;
+  if (!DB.meters.length){
+    html += `<div class="empty"><div class="e">▦</div><p>No meters yet.</p></div>`;
+  }
+  for (const m of DB.meters){
+    const d = disco(m.disco);
+    html += `
+      <div class="card meter-card" style="--disco:${d.color}" onclick="editMeter(${m.id})">
+        <div class="mc-top">
+          <div>
+            <div class="mc-name">${esc(m.name)}${m.active ? "" : ' <span style="color:var(--ink-faint);font-weight:400">· paused</span>'}</div>
+            <div class="mc-meta">${esc(d.name)}</div>
+          </div>
+          <span class="chip">${esc(d.code)}</span>
+        </div>
+        ${m.meterNo ? `<div class="row"><span class="k">Meter no</span><span class="v">${esc(m.meterNo)}</span></div>` : ""}
+        ${m.consumerId ? `<div class="row"><span class="k">Consumer ID</span><span class="v">${esc(m.consumerId)}</span></div>` : ""}
+        ${m.refNo ? `<div class="row"><span class="k">Reference no</span><span class="v">${esc(m.refNo)}</span></div>` : ""}
+        <div class="row"><span class="k">Opening reading</span><span class="v">${fmt(m.opening,0)} · ${esc(m.openingDate||"")}</span></div>
+      </div>`;
+  }
+  v.innerHTML = html;
+}
+
+function editMeter(id){
+  const m = id ? DB.meters.find(x => x.id === id)
+               : {name:"", disco:"FESCO", meterNo:"", consumerId:"", refNo:"", address:"",
+                  mf:1, digits:6, opening:0, openingDate:today(), active:true};
+  sheet(`
+    <h3>${id ? "Edit meter" : "Add a meter"}</h3>
+    <p class="sub">${id ? "Changes apply to future calculations" : "Take these details from your latest bill"}</p>
+    <div class="field"><label for="f_name">Name this connection</label>
+      <input type="text" id="f_name" value="${esc(m.name)}" placeholder="Home, Shop, Tubewell"></div>
+    <div class="field"><label for="f_disco">Electricity supplier</label>
+      <select id="f_disco">${DISCOS.map(d =>
+        `<option value="${d.code}" ${d.code===m.disco?"selected":""}>${d.code} — ${d.name}</option>`).join("")}</select></div>
+    <p class="sub" id="regionNote" style="margin:-10px 0 16px"></p>
+    <div class="field"><label for="f_meter">Meter number</label>
+      <input type="text" id="f_meter" value="${esc(m.meterNo)}" placeholder="as printed on the bill"></div>
+    <div class="grid2">
+      <div class="field"><label for="f_cid">Consumer ID</label>
+        <input type="text" id="f_cid" inputmode="numeric" value="${esc(m.consumerId)}"></div>
+      <div class="field"><label for="f_ref">Reference no</label>
+        <input type="text" id="f_ref" inputmode="numeric" value="${esc(m.refNo)}"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="f_open">Opening reading</label>
+        <input type="number" id="f_open" inputmode="decimal" step="any" value="${m.opening}"></div>
+      <div class="field"><label for="f_odate">Reading date</label>
+        <input type="date" id="f_odate" value="${esc(m.openingDate||today())}"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="f_mf">Multiplier (MF)</label>
+        <input type="number" id="f_mf" inputmode="decimal" step="any" value="${m.mf}"></div>
+      <div class="field"><label for="f_dig">Dial digits</label>
+        <input type="number" id="f_dig" inputmode="numeric" value="${m.digits}"></div>
+    </div>
+    <div class="field"><label style="display:flex;align-items:center;gap:9px;text-transform:none;letter-spacing:0;font-size:14px;color:var(--ink)">
+      <input type="checkbox" id="f_act" ${m.active?"checked":""} style="width:19px;height:19px;accent-color:var(--live)">
+      Include this meter in daily tracking</label></div>
+    <button class="btn" id="saveM">${id ? "Save changes" : "Add meter"}</button>
+    ${id ? `<button class="btn danger sm" style="margin-top:10px" id="delM">Delete meter and its readings</button>` : ""}
+  `);
+  const sel = document.getElementById("f_disco");
+  const note = document.getElementById("regionNote");
+  const showRegion = () => { note.textContent = disco(sel.value).region; };
+  sel.onchange = showRegion; showRegion();
+
+  document.getElementById("saveM").onclick = () => {
+    const name = document.getElementById("f_name").value.trim();
+    if (!name){ toast("Give this connection a name"); return; }
+    const data = {
+      name, disco: sel.value,
+      meterNo: document.getElementById("f_meter").value.trim(),
+      consumerId: document.getElementById("f_cid").value.trim(),
+      refNo: document.getElementById("f_ref").value.trim(),
+      mf: parseFloat(document.getElementById("f_mf").value) || 1,
+      digits: parseInt(document.getElementById("f_dig").value) || 6,
+      opening: parseFloat(document.getElementById("f_open").value) || 0,
+      openingDate: document.getElementById("f_odate").value || today(),
+      active: document.getElementById("f_act").checked
+    };
+    if (id) Object.assign(DB.meters.find(x => x.id === id), data);
+    else DB.meters.push(Object.assign({id: DB.seq++}, data));
+    save(); closeSheet(); render(); toast(id ? "Meter updated" : "Meter added");
+  };
+  if (id) document.getElementById("delM").onclick = () => {
+    if (!confirm("Delete this meter and every reading recorded for it?")) return;
+    DB.meters = DB.meters.filter(x => x.id !== id);
+    delete DB.readings[id];
+    save(); closeSheet(); render(); toast("Meter deleted");
+  };
+}
+
+/* =============================================================
+   VIEW - MONTHLY REPORT
+   ============================================================= */
+function vReport(v){
+  document.getElementById("scrTitle").textContent = "Report";
+  const s = DB.settings;
+  const {from, to} = periodFor(repY, repM, s.useCycle, s.cycleStart);
+  document.getElementById("scrSub").textContent = from + "  to  " + to;
+
+  const meters = DB.meters.filter(m => m.active);
+  if (!meters.length){
+    v.innerHTML = `<div class="empty"><div class="e">▤</div><p>Add a meter to see monthly reports.</p></div>`;
+    return;
+  }
+  const {rows, tot, grand} = matrix(from, to, meters);
+  const closed = isClosed(repY, repM);
+  const withData = rows.filter(r => r.dayTotal > 0).length;
+  const peak = rows.reduce((a,b) => b.dayTotal > a.dayTotal ? b : a, rows[0]);
+  const maxV = Math.max(...rows.map(r => r.dayTotal), 1);
+  const cost = grand * (s.tariff || 0);
+
+  v.innerHTML = `
+    <div class="date-bar">
+      <button class="nudge" onclick="shiftMonth(-1)">‹</button>
+      <input type="text" value="${MONTHS[repM]} ${repY}" readonly style="text-align:center;font-weight:700">
+      <button class="nudge" onclick="shiftMonth(1)">›</button>
+    </div>
+    <div class="seg">
+      <button class="${s.useCycle?"on":""}" onclick="setCycle(true)">Bill cycle</button>
+      <button class="${!s.useCycle?"on":""}" onclick="setCycle(false)">Calendar month</button>
+    </div>
+    ${closed ? `<div class="banner closed">Closed on ${esc((DB.closings.find(c=>c.year===repY&&c.month===repM)||{}).closedOn||"")}. Readings are locked.</div>` : ""}
+
+    <div class="card" style="text-align:center">
+      <h3>Units this month</h3>
+      <div class="big">${fmt(grand)}<span class="unit">units</span></div>
+      ${s.tariff > 0 ? `<div style="color:var(--ink-dim);font-size:13px;margin-top:6px">
+        Estimated ${esc(s.currency)} ${fmt(cost)} at ${fmt(s.tariff)} per unit</div>` : ""}
+      <div class="chart">${rows.map(r =>
+        `<div class="bar${r===peak&&r.dayTotal>0?" hi":""}" style="height:${Math.max(2,(r.dayTotal/maxV)*100)}%"></div>`).join("")}</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-faint);margin-top:5px">
+        <span>${esc(from.slice(8))} ${esc(MONTHS[parse(from).getMonth()].slice(0,3))}</span>
+        <span>${esc(to.slice(8))} ${esc(MONTHS[parse(to).getMonth()].slice(0,3))}</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Day by day</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Date</th>${meters.map(m => `<th>${esc(m.name)}</th>`).join("")}
+          <th>Day</th><th>Total so far</th></tr></thead>
+        <tbody>${rows.map(r => `<tr>
+          <td>${esc(r.date.slice(5))}</td>
+          ${meters.map(m => `<td class="${r.per[m.id]?"":"zero"}">${r.per[m.id] ? fmt(r.per[m.id]) : "·"}</td>`).join("")}
+          <td class="${r.dayTotal?"":"zero"}">${r.dayTotal ? fmt(r.dayTotal) : "·"}</td>
+          <td class="cum">${fmt(r.cum)}</td></tr>`).join("")}
+          <tr class="tot"><td>Total</td>
+          ${meters.map(m => `<td>${fmt(tot[m.id])}</td>`).join("")}
+          <td>${fmt(grand)}</td><td>${fmt(grand)}</td></tr>
+        </tbody></table></div>
+    </div>
+
+    <div class="card">
+      <h3>Month closing</h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Meter</th><th>Opening</th><th>Closing</th><th>Units</th><th>Share</th></tr></thead>
+        <tbody>${meters.map(m => {
+          const oc = openClose(m, from, to);
+          const share = grand ? (tot[m.id]/grand*100) : 0;
+          return `<tr><td>${esc(m.name)}</td><td>${fmt(oc.open,0)}</td>
+            <td>${oc.close!=null?fmt(oc.close,0):"·"}</td>
+            <td>${fmt(tot[m.id])}</td><td>${share.toFixed(1)}%</td></tr>`;
+        }).join("")}
+        <tr class="tot"><td>Total</td><td></td><td></td><td>${fmt(grand)}</td><td>100%</td></tr>
+        </tbody></table></div>
+      <div class="row"><span class="k">Days with a reading</span><span class="v">${withData} of ${rows.length}</span></div>
+      ${withData ? `<div class="row"><span class="k">Average per reading day</span><span class="v">${fmt(grand/withData)}</span></div>` : ""}
+      ${peak && peak.dayTotal ? `<div class="row"><span class="k">Highest day</span><span class="v">${esc(peak.date)} · ${fmt(peak.dayTotal)}</span></div>` : ""}
+    </div>
+
+    <button class="btn ghost" onclick="exportCSV()">Export this report as CSV</button>
+    <div style="height:10px"></div>
+    ${closed
+      ? `<button class="btn ghost" onclick="reopenMonth()">Reopen this month</button>`
+      : `<button class="btn" onclick="closeMonth()">Close this month</button>`}
+    <div style="height:20px"></div>`;
+}
+function shiftMonth(n){
+  repM += n;
+  if (repM < 0){ repM = 11; repY--; }
+  if (repM > 11){ repM = 0; repY++; }
+  render();
+}
+function setCycle(on){ DB.settings.useCycle = on; save(); render(); }
+
+function closeMonth(){
+  const s = DB.settings;
+  const {from, to} = periodFor(repY, repM, s.useCycle, s.cycleStart);
+  const meters = DB.meters.filter(m => m.active);
+  const {tot, grand} = matrix(from, to, meters);
+  if (!confirm(`Close ${MONTHS[repM]} ${repY}?\n\n${from} to ${to}\nTotal ${fmt(grand)} units\n\nReadings in this period will be locked.`)) return;
+  DB.closings.push({
+    year:repY, month:repM, from, to, closedOn:today(),
+    total:grand, tariff:s.tariff, cost:grand*(s.tariff||0),
+    detail: meters.map(m => {
+      const oc = openClose(m, from, to);
+      return {name:m.name, disco:m.disco, meterNo:m.meterNo,
+              open:oc.open, close:oc.close, units:tot[m.id]};
+    })
+  });
+  save(); render(); toast("Month closed");
+}
+function reopenMonth(){
+  if (!confirm(`Reopen ${MONTHS[repM]} ${repY} for editing?`)) return;
+  DB.closings = DB.closings.filter(c => !(c.year===repY && c.month===repM));
+  save(); render(); toast("Month reopened");
+}
+
+/* =============================================================
+   CSV / BACKUP
+   ============================================================= */
+function download(name, text, type){
+  const blob = new Blob([text], {type: type || "text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
+}
+function exportCSV(){
+  const s = DB.settings;
+  const {from, to} = periodFor(repY, repM, s.useCycle, s.cycleStart);
+  const meters = DB.meters.filter(m => m.active);
+  const {rows, tot, grand} = matrix(from, to, meters);
+  const q = v => `"${String(v==null?"":v).replace(/"/g,'""')}"`;
+  const L = [];
+  L.push([q(`Monthly consumption report - ${MONTHS[repM]} ${repY}`)].join(","));
+  L.push([q("Period"), q(from), q("to"), q(to)].join(","));
+  L.push("");
+  L.push(["Date", ...meters.map(m => `${m.name} (${disco(m.disco).code})`), "Day total", "Accumulated"].map(q).join(","));
+  rows.forEach(r => L.push([r.date, ...meters.map(m => r.per[m.id].toFixed(2)),
+                            r.dayTotal.toFixed(2), r.cum.toFixed(2)].map(q).join(",")));
+  L.push(["MONTH TOTAL", ...meters.map(m => tot[m.id].toFixed(2)),
+          grand.toFixed(2), grand.toFixed(2)].map(q).join(","));
+  L.push("");
+  L.push([q("MONTH CLOSING")].join(","));
+  L.push(["Meter","Supplier","Meter no","Consumer ID","Reference no","Opening","Closing","Units"].map(q).join(","));
+  meters.forEach(m => {
+    const oc = openClose(m, from, to);
+    L.push([m.name, disco(m.disco).code, m.meterNo, m.consumerId, m.refNo,
+            oc.open, oc.close==null?"":oc.close, tot[m.id].toFixed(2)].map(q).join(","));
+  });
+  L.push("");
+  L.push([q("Total units"), q(grand.toFixed(2))].join(","));
+  L.push([q("Tariff per unit"), q((s.tariff||0).toFixed(2))].join(","));
+  L.push([q(`Estimated cost (${s.currency})`), q((grand*(s.tariff||0)).toFixed(2))].join(","));
+  download(`meter_report_${repY}_${String(repM+1).padStart(2,"0")}.csv`,
+           "\ufeff" + L.join("\r\n"), "text/csv;charset=utf-8");
+  toast("CSV saved to your downloads");
+}
+
+function vData(v){
+  document.getElementById("scrTitle").textContent = "Backup";
+  const s = DB.settings;
+  const nReadings = Object.values(DB.readings).reduce((a,o) => a + Object.keys(o).length, 0);
+  v.innerHTML = `
+    <div class="card">
+      <h3>Your data</h3>
+      <div class="row"><span class="k">Meters</span><span class="v">${DB.meters.length}</span></div>
+      <div class="row"><span class="k">Readings recorded</span><span class="v">${nReadings}</span></div>
+      <div class="row"><span class="k">Months closed</span><span class="v">${DB.closings.length}</span></div>
+      <div class="row"><span class="k">Stored</span><span class="v">On this phone only</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Backup and restore</h3>
+      <p style="font-size:13px;color:var(--ink-dim);margin:0 0 12px">
+        Save a backup file, then keep it in Google Drive or WhatsApp yourself.
+        A backup that only exists on this phone will not help if the phone is lost.</p>
+      <button class="btn" onclick="backupNow()">Save a backup file</button>
+      <div style="height:9px"></div>
+      <button class="btn ghost" onclick="document.getElementById('impF').click()">Restore from a backup file</button>
+      <input type="file" id="impF" accept=".json,application/json" class="hide">
+      <div style="height:9px"></div>
+      <button class="btn ghost" onclick="exportAllCSV()">Export every reading as CSV</button>
+    </div>
+
+    <div class="card">
+      <h3>Billing</h3>
+      <div class="field"><label for="s_tar">Tariff per unit</label>
+        <input type="number" id="s_tar" inputmode="decimal" step="any" value="${s.tariff}"></div>
+      <div class="grid2">
+        <div class="field"><label for="s_cur">Currency</label>
+          <input type="text" id="s_cur" value="${esc(s.currency)}"></div>
+        <div class="field"><label for="s_cyc">Bill cycle starts on</label>
+          <input type="number" id="s_cyc" inputmode="numeric" min="1" max="28" value="${s.cycleStart}"></div>
+      </div>
+      <p style="font-size:12px;color:var(--ink-faint);margin:0 0 12px">
+        Set this to the reading date printed on your bill, so the report matches your billing period.
+        Suppliers charge in slabs, so the estimate is a guide, not the exact bill.</p>
+      <button class="btn ghost" onclick="saveSettings()">Save billing settings</button>
+    </div>
+
+    <div class="card">
+      <h3>Security</h3>
+      <button class="btn ghost" onclick="changePw()">Change password</button>
+      <div style="height:9px"></div>
+      <button class="btn ghost" onclick="document.getElementById('logoutBtn').click()">Log out</button>
+    </div>
+
+    <div class="card">
+      <h3>Suppliers covered</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${DISCOS.filter(d => d.code !== "OTHER").map(d =>
+          `<span class="chip" style="--disco:${d.color}">${d.code}</span>`).join("")}
+      </div>
+      <p style="font-size:12px;color:var(--ink-faint);margin:12px 0 0">
+        An independent tracking tool. Not affiliated with, endorsed by, or connected to
+        any distribution company, PEPCO or WAPDA. Readings are entered by you.</p>
+    </div>
+    <div style="height:14px"></div>`;
+
+  document.getElementById("impF").onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try{
+        const d = JSON.parse(r.result);
+        if (!d.meters || !d.readings) throw new Error("not a backup file");
+        if (!confirm(`Restore this backup?\n\n${d.meters.length} meters\nSaved ${d.exportedOn||"unknown date"}\n\nYour current data will be replaced.`)) return;
+        const keepPw = DB.pw;
+        memStore = Object.assign(blankDB(), d);
+        if (!memStore.pw) memStore.pw = keepPw;
+        DB = memStore; save(); render(); toast("Backup restored");
+      }catch(err){ alert("That file could not be read as a backup."); }
+    };
+    r.readAsText(f);
+    e.target.value = "";
+  };
+}
+function backupNow(){
+  const out = Object.assign({}, DB, {exportedOn: new Date().toISOString().slice(0,16).replace("T"," "), app:"Bijli Meter Tracker"});
+  download(`bijli_backup_${today()}.json`, JSON.stringify(out, null, 1), "application/json");
+  toast("Backup file saved");
+}
+function exportAllCSV(){
+  const q = v => `"${String(v==null?"":v).replace(/"/g,'""')}"`;
+  const L = [["Date","Meter","Supplier","Meter no","Reading","Units that day"].map(q).join(",")];
+  for (const m of DB.meters){
+    const r = DB.readings[m.id] || {};
+    Object.keys(r).sort().forEach(d =>
+      L.push([d, m.name, disco(m.disco).code, m.meterNo, r[d], dayUnits(m, d).toFixed(2)].map(q).join(",")));
+  }
+  download(`all_readings_${today()}.csv`, "\ufeff" + L.join("\r\n"), "text/csv;charset=utf-8");
+  toast("CSV saved to your downloads");
+}
+function saveSettings(){
+  DB.settings.tariff = parseFloat(document.getElementById("s_tar").value) || 0;
+  DB.settings.currency = document.getElementById("s_cur").value.trim() || "PKR";
+  const c = parseInt(document.getElementById("s_cyc").value);
+  DB.settings.cycleStart = (c >= 1 && c <= 28) ? c : 8;
+  save(); render(); toast("Billing settings saved");
+}
+function changePw(){
+  sheet(`
+    <h3>Change password</h3>
+    <p class="sub">You will use the new one next time you open the app</p>
+    <div class="field"><label for="c_old">Current password</label><input type="password" id="c_old"></div>
+    <div class="field"><label for="c_n1">New password</label><input type="password" id="c_n1"></div>
+    <div class="field"><label for="c_n2">Confirm new password</label><input type="password" id="c_n2"></div>
+    <div class="msg" id="c_msg"></div>
+    <button class="btn" id="c_go">Save new password</button>`);
+  document.getElementById("c_go").onclick = async () => {
+    const msg = document.getElementById("c_msg");
+    if (await sha256(document.getElementById("c_old").value) !== DB.pw){
+      msg.textContent = "The current password does not match."; return;
+    }
+    const n1 = document.getElementById("c_n1").value;
+    if (n1.length < 4){ msg.textContent = "Use at least 4 characters."; return; }
+    if (n1 !== document.getElementById("c_n2").value){
+      msg.textContent = "The two new passwords do not match."; return;
+    }
+    DB.pw = await sha256(n1); save(); closeSheet(); toast("Password changed");
+  };
+}
+
+/* =============================================================
+   SHEET (modal)
+   ============================================================= */
+function sheet(html){
+  const m = document.getElementById("modal");
+  m.className = "modal";
+  m.innerHTML = `<div class="sheet"><div class="grab"></div>${html}</div>`;
+  m.onclick = e => { if (e.target === m) closeSheet(); };
+  document.body.style.overflow = "hidden";
+}
+function closeSheet(){
+  const m = document.getElementById("modal");
+  m.className = ""; m.innerHTML = "";
+  document.body.style.overflow = "";
+}
+
+/* =============================================================
+   START
+   ============================================================= */
+paintLogin();
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  navigator.serviceWorker.register("service-worker.js").catch(() => {});
+}
+</script>
+</body>
+</html>
